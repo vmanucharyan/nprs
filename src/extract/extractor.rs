@@ -2,7 +2,7 @@ use image::Image;
 use extract::structures::NumberPlate;
 
 pub trait ExtractPlate {
-    fn extract(img: Image) -> Vec<NumberPlate> {
+    fn extract<T>(img: &Image) -> Vec<NumberPlate> {
         return vec![];
     }
 }

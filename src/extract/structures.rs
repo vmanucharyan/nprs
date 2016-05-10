@@ -1,10 +1,4 @@
-pub struct Point {
-    x: i32,
-    y: i32
-}
-
-pub struct Rect(Point, Point);
-pub struct Quad(Point, Point, Point, Point);
+use structures::{Rect, Point, Quad};
 
 pub struct Symbol {
     bound: Rect

@@ -1,11 +1,11 @@
-#[allow(dead_code)]
+#![feature(plugin)]
+#![cfg_attr(test, plugin(stainless))]
+
+#![allow(dead_code)]
 
 mod extract;
 mod image;
+mod structures;
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
+mod test;
