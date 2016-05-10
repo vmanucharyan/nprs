@@ -1,0 +1,6 @@
+[package]
+name = "nprs"
+version = "0.1.0"
+authors = ["Vardan Manucharyan <sd003gm@gmail.com>"]
+
+[dependencies]
