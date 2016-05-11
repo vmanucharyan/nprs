@@ -1,13 +1,13 @@
 use std::ops::Index;
 
-pub struct Image {
-    data: Vec<u8>,
+pub struct Image<T> {
+    data: Vec<T>,
     width: usize,
     height: usize,
 }
 
-impl Image {
-    pub fn from_data(_data: Vec<u8>, _width: usize, _height: usize) -> Image {
+impl<T> Image<T> {
+    pub fn from_data(_data: Vec<T>, _width: usize, _height: usize) -> Image<T> {
         assert!(_data.len() == _width * _height);
         return Image {
             data: _data,
@@ -29,10 +29,10 @@ impl Image {
     }
 }
 
-impl Index<(usize, usize)> for Image {
-    type Output = u8;
+impl<T> Index<(usize, usize)> for Image<T> {
+    type Output = T;
 
-    fn index(&self, p: (usize, usize)) -> &u8 {
+    fn index(&self, p: (usize, usize)) -> &T {
         let (x, y) = p;
         return &(self.data[y * self.width + x])
     }

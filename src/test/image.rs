@@ -13,12 +13,12 @@ describe! image {
 
     describe! from_data {
         it "should create image of specified dimensions" {
-            let img = Image::from_data(data, 3, 2);
+            let img: Image<u8> = Image::from_data(data, 3, 2);
             assert_eq!(img.dimensions(), (3, 2));
         }
 
         failing "if data size does not match dimensions" {
-            let img = Image::from_data(data, 3, 4);
+            let img: Image<u8> = Image::from_data(data, 3, 4);
         }
     }
 
