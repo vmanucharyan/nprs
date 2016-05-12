@@ -14,7 +14,7 @@ pub fn detect_regions<T: Incremental + Sized> (image: &Image<u8>) -> Vec<T> {
         }
     }
 
-    vec![]
+    return all_regions;
 }
 
 pub fn process_point<T: Incremental + Sized>(
@@ -37,14 +37,17 @@ pub fn process_point<T: Incremental + Sized>(
         },
         [r1_idx, r2_idx] => {
             if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, r2_idx) {
+                r1.increment(p);
+                reg_image.set_pixel(p.x, p.y, Some(r1_idx));
+
                 r1.merge(r2);
                 if let Some(points) = r2.points() {
                     for p in points {
-                        reg_image.set_pixel(p.x, p.y, Some(r2_idx));
+                        reg_image.set_pixel(p.x, p.y, Some(r1_idx));
                     }
                 }
             } else {
-                panic!("got None");
+                panic!("failed to get regions - got None");
             }
         },
         _ => {

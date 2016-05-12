@@ -100,8 +100,7 @@ describe! detect_regions {
             let mut regions: Vec<TestInc> = vec![r1.clone(), r2.clone()];
         }
 
-        it "should create new region and add it to regions list
-            if there are no adjacent regions" {
+        it "should create new region and add it to regions list if there are no adjacent regions" {
             let new_point = Point { x: 3, y: 2 };
             let expected_region = TestInc {
                 points: vec![new_point]
@@ -146,15 +145,18 @@ describe! detect_regions {
 
         it "should merge regions if there are 2 adjacent regions" {
             let b: Vec<u8> = vec![
-                0, 2, 2, 0,
-                0, 0, 2, 2,
-                2, 2, 2, 0,
+                0, 1, 1, 0,
+                0, 0, 1, 0,
+                1, 1, 1, 0,
                 0, 0, 0, 0,
             ];
             let expected_data: Vec<Option<usize>> = b.iter()
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
                 .collect();
 
+            process_point::<TestInc>(Point { x: 2, y: 2 }, &mut reg_img, &mut regions);
+
+            assert_eq!(reg_img.data(), &expected_data[..]);
         }
     }
 
