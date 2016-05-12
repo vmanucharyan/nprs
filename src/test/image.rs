@@ -38,4 +38,21 @@ describe! image {
             img[(2, 2)];
         }
     }
+
+    describe! inside {
+        before_each {
+            let img = Image::from_data(data, 3, 2);
+        }
+
+        it "should return true if point is in bounds" {
+            assert_eq!(img.inside(2, 1), true);
+            assert_eq!(img.inside(0, 0), true);
+            assert_eq!(img.inside(2, 0), true);
+        }
+
+        it "should return false if point is out of bounds" {
+            assert_eq!(img.inside(-1, 0), false);
+            assert_eq!(img.inside(3, 2), false);
+        }
+    }
 }
