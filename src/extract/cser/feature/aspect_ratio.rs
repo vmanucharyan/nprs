@@ -1,18 +1,23 @@
-pub use super::Feature;
+use extract::cser::Incremental;
 use structures::{Point, Rect};
 
+#[derive(Debug, Copy, Clone)]
 pub struct AspectRatio {
     bounds: Rect
 }
 
 impl AspectRatio {
+    pub fn value(&self) -> f32 {
+        self.bounds.aspect_ratio()
+    }
+
     fn from_bounds(r: Rect) -> AspectRatio {
         AspectRatio { bounds: r }
     }
 }
 
-impl Feature for AspectRatio {
-    fn init(p: Point) -> Self {
+impl Incremental for AspectRatio {
+    fn init(p: Point) -> AspectRatio {
         AspectRatio {
             bounds: Rect(p, p)
         }
@@ -29,21 +34,18 @@ impl Feature for AspectRatio {
             bounds: self.bounds.expand(o.bounds)
         }
     }
-
-    fn value(&self) -> f32 {
-        self.bounds.aspect_ratio()
-    }
 }
 
 #[cfg(test)]
 mod test {
-    pub use super::{AspectRatio, Feature};
+    pub use extract::cser::Incremental;
+    pub use super::AspectRatio;
     pub use structures::{Point, Rect};
 
     describe! aspect_ratio {
         describe! init {
             before_each {
-                let ar: AspectRatio = Feature::init(Point { x: 6, y: 3 });
+                let ar: AspectRatio = AspectRatio::init(Point { x: 6, y: 3 });
             }
 
             it "should create aspect ratio feature with value `1`" {
