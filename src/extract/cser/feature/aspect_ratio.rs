@@ -23,16 +23,12 @@ impl Incremental for AspectRatio {
         }
     }
 
-    fn increment(&self, p: Point) -> AspectRatio {
-        AspectRatio {
-            bounds: self.bounds.expand(Rect(p, p))
-        }
+    fn increment(&mut self, p: Point) {
+        self.bounds = self.bounds.expand(Rect(p, p))
     }
 
-    fn merge(&self, o: &AspectRatio) -> AspectRatio {
-        AspectRatio {
-            bounds: self.bounds.expand(o.bounds)
-        }
+    fn merge(&mut self, o: &AspectRatio) {
+        self.bounds = self.bounds.expand(o.bounds)
     }
 }
 
@@ -60,7 +56,7 @@ mod test {
 
         describe! increment {
             before_each {
-                let ar = AspectRatio::from_bounds(Rect(
+                let mut ar = AspectRatio::from_bounds(Rect(
                     Point { x: 2, y: 2 },
                     Point { x: 5, y: 4 }
                 ));
@@ -82,10 +78,10 @@ mod test {
                     Point { x: 6, y: 4 }
                 );
 
-                let new_ar = ar.increment(Point{ x: 6, y: 3 });
+                ar.increment(Point{ x: 6, y: 3 });
 
-                assert_eq!(new_ar.bounds, expected_rect);
-                assert_eq!(new_ar.value(), 5.0f32 / 3.0f32);
+                assert_eq!(ar.bounds, expected_rect);
+                assert_eq!(ar.value(), 5.0f32 / 3.0f32);
             }
 
             it "should expand correctly when new point is added 2" {
@@ -105,16 +101,16 @@ mod test {
                     Point { x: 5, y: 5 }
                 );
 
-                let new_ar = ar.increment(Point{ x: 1, y: 5 });
+                ar.increment(Point{ x: 1, y: 5 });
 
-                assert_eq!(new_ar.bounds, expected_rect);
-                assert_eq!(new_ar.value(), 5.0f32 / 4.0f32);
+                assert_eq!(ar.bounds, expected_rect);
+                assert_eq!(ar.value(), 5.0f32 / 4.0f32);
             }
         }
 
         describe! merge {
             before_each {
-                let ar = AspectRatio::from_bounds(Rect(
+                let mut ar = AspectRatio::from_bounds(Rect(
                     Point { x: 2, y: 2 },
                     Point { x: 5, y: 4 }
                 ));
@@ -142,10 +138,10 @@ mod test {
                     Point { x: 5, y: 5 }
                 );
 
-                let merged = ar.merge(&ar2);
+                ar.merge(&ar2);
 
-                assert_eq!(merged.bounds, expected_bounds);
-                assert_eq!(merged.value(), 6.0f32 / 4.0f32);
+                assert_eq!(ar.bounds, expected_bounds);
+                assert_eq!(ar.value(), 6.0f32 / 4.0f32);
             }
 
             it "should merge bounds 2" {
@@ -172,10 +168,10 @@ mod test {
                     Point { x: 7, y: 4 }
                 );
 
-                let merged = ar.merge(&ar2);
+                ar.merge(&ar2);
 
-                assert_eq!(merged.bounds, expected_bounds);
-                assert_eq!(merged.value(), 6.0f32 / 5.0f32);
+                assert_eq!(ar.bounds, expected_bounds);
+                assert_eq!(ar.value(), 6.0f32 / 5.0f32);
             }
         }
     }

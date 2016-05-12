@@ -5,7 +5,8 @@ use super::incremental::Incremental;
 #[derive(Debug)]
 pub struct Region {
     aspect_ratio: AspectRatio,
-    bounds: Rect
+    bounds: Rect,
+    points: Vec<Point>
 }
 
 impl Region {
@@ -18,22 +19,21 @@ impl Incremental for Region {
     fn init(p: Point) -> Region {
         Region {
             aspect_ratio: AspectRatio::init(p),
-            bounds: Rect(p, p)
+            bounds: Rect(p, p),
+            points: vec![p]
         }
     }
 
-    fn increment(&self, p: Point) -> Region {
-        Region {
-            aspect_ratio: self.aspect_ratio.increment(p),
-            bounds: self.bounds.expand(Rect(p, p))
-        }
+    fn increment(&mut self, p: Point) {
+        self.aspect_ratio.increment(p);
+        self.bounds = self.bounds.expand(Rect(p, p));
+        self.points.push(p);
     }
 
-    fn merge(&self, r: &Region) -> Region {
-        Region {
-            aspect_ratio: self.aspect_ratio.merge(&r.aspect_ratio),
-            bounds: self.bounds.expand(r.bounds)
-        }
+    fn merge(&mut self, r: &Region) {
+        self.aspect_ratio.merge(&r.aspect_ratio);
+        self.bounds = self.bounds.expand(r.bounds);
+        self.points.extend_from_slice(&r.points[..]);
     }
 }
 
@@ -45,9 +45,15 @@ mod test {
 
     describe! region {
         describe! init {
-            it "should create Region with one point" {
+            it "should create Region with one point bounds" {
                 let region: Region = Incremental::init(Point { x: 6, y: 3 });
                 assert_eq!(region.aspect_ratio(), 1.0f32);
+            }
+
+            it "should create Region that contains one point" {
+                let region: Region = Incremental::init(Point { x: 6, y: 3 });
+                let expected_points = vec![Point { x: 6, y: 3 }];
+                assert_eq!(region.points, expected_points);
             }
         }
     }
