@@ -1,4 +1,5 @@
 #![feature(plugin)]
+#![feature(slice_patterns)]
 #![cfg_attr(test, plugin(stainless))]
 
 #![allow(dead_code)]

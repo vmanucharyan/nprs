@@ -11,7 +11,7 @@ impl AspectRatio {
         self.bounds.aspect_ratio()
     }
 
-    fn from_bounds(r: Rect) -> AspectRatio {
+    pub fn from_bounds(r: Rect) -> AspectRatio {
         AspectRatio { bounds: r }
     }
 }

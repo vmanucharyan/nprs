@@ -1,6 +1,7 @@
 use std::ops::Index;
 
-pub struct Image<T> {
+#[derive(Clone, PartialEq, Eq)]
+pub struct Image<T: Clone + Copy> {
     data: Vec<T>,
     width: usize,
     height: usize,
@@ -37,7 +38,7 @@ impl<T: Copy + Clone> Image<T> {
         self.data[(y as usize) * self.width + (x as usize)] = value;
     }
 
-    pub fn map<F, A>(&self, fun: F) -> Image<A>
+    pub fn map<F, A: Copy + Clone>(&self, fun: F) -> Image<A>
     where F: Fn(&T) -> A {
         Image {
             width: self.width,
@@ -45,9 +46,13 @@ impl<T: Copy + Clone> Image<T> {
             data: self.data.iter().map(|b| fun(b)).collect()
         }
     }
+
+    pub fn data<'a>(&'a self) -> &'a [T] {
+        &self.data[..]
+    }
 }
 
-impl<T> Index<(usize, usize)> for Image<T> {
+impl<T: Copy + Clone> Index<(usize, usize)> for Image<T> {
     type Output = T;
 
     fn index(&self, p: (usize, usize)) -> &T {
