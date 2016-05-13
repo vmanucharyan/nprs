@@ -4,9 +4,11 @@
 
 #![allow(dead_code)]
 
-mod extract;
-mod image;
-mod structures;
+extern crate image as pd_image;
+
+pub mod extract;
+pub mod image;
+pub mod structures;
 
 #[cfg(test)]
 mod test;

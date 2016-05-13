@@ -4,6 +4,16 @@ version = "0.1.0"
 authors = ["Vardan Manucharyan <sd003gm@gmail.com>"]
 
 [dependencies]
+image = "*"
+stopwatch = "0.0.6"
 
 [dev-dependencies]
 stainless = "*"
+
+[lib]
+name = "nprs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "nprs-cli"
+path = "src/cli.rs"

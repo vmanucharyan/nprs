@@ -36,7 +36,7 @@ describe! detect_regions {
             let image: Image<u8> = Image::from_data(data, 4, 2);
             let hist = hist(&image);
 
-            assert_eq!(hist.len(), 255);
+            assert_eq!(hist.len(), 256);
             assert_eq!(hist[0].len(), 1);
             assert_eq!(hist[13].len(), 3);
             assert_eq!(hist[6].len(), 2);

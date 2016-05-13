@@ -1,8 +1,37 @@
+use std::hash::{Hash, Hasher, SipHasher};
+
+use image;
 use image::Image;
+use image::pixel::{ToLuma, ToRgba, Rgba};
 use structures::Point;
 use extract::cser::{Incremental, HasPoints};
 
-pub fn detect_regions<T: Incremental + HasPoints + Sized> (image: &Image<u8>) -> Vec<T> {
+impl ToLuma for Option<usize> {
+    fn to_luma(&self) -> u8 {
+        if self.is_some() { 255 } else { 0 }
+    }
+}
+
+impl ToRgba for Option<usize> {
+    fn to_rgba(&self) -> Rgba {
+        if let Some(val) = *self {
+            let mut s = SipHasher::new();
+            (val as i32).hash(&mut s);
+            Rgba::from_i32(s.finish() as i32)
+        }
+        else {
+            Rgba::from_i32(0i32)
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct TraceConfig {
+    pub enabled: bool,
+    pub out_dir: &'static str
+}
+
+pub fn detect_regions<T: Incremental + HasPoints + Sized> (image: &Image<u8>, trace: TraceConfig) -> Vec<T> {
     let baskets = hist(image);
     let mut all_regions: Vec<T> = vec![];
     let mut reg_image: Image<Option<usize>> = image.map( |_| None );
@@ -11,6 +40,12 @@ pub fn detect_regions<T: Incremental + HasPoints + Sized> (image: &Image<u8>) ->
         let points = &baskets[i];
         for p in points {
             process_point(p.clone(), &mut reg_image, &mut all_regions);
+        }
+        if trace.enabled {
+            if i % 5 == 0 {
+                let r = image::io::save_to_file(&format!("{}/step_{}.png", trace.out_dir, i), &reg_image);
+                debug_assert!(r.is_ok());
+            }
         }
     }
 
@@ -57,7 +92,7 @@ pub fn process_point<T: Incremental + HasPoints + Sized>(
 pub fn hist(image: &Image<u8>) -> Vec<Vec<Point>> {
     let mut baskets: Vec<Vec<Point>> = vec![];
 
-    for _ in 0..255 {
+    for _ in 0..256 {
         baskets.push(vec![])
     }
 
