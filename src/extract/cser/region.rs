@@ -1,6 +1,6 @@
 use structures::{Point, Rect};
 use super::feature::{AspectRatio};
-use super::incremental::Incremental;
+use super::incremental::{Incremental, HasPoints};
 
 #[derive(Debug, Clone)]
 pub struct Region {
@@ -35,9 +35,11 @@ impl Incremental for Region {
         self.bounds = self.bounds.expand(r.bounds);
         self.points.extend_from_slice(&r.points[..]);
     }
+}
 
-    fn points<'a> (&'a self) -> Option<&'a[Point]> {
-        Some(&self.points[..])
+impl HasPoints for Region {
+    fn points<'a> (&'a self) -> &'a [Point] {
+        &self.points[..]
     }
 }
 

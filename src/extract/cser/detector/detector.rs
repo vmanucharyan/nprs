@@ -1,8 +1,8 @@
 use image::Image;
 use structures::Point;
-use extract::cser::Incremental;
+use extract::cser::{Incremental, HasPoints};
 
-pub fn detect_regions<T: Incremental + Sized> (image: &Image<u8>) -> Vec<T> {
+pub fn detect_regions<T: Incremental + HasPoints + Sized> (image: &Image<u8>) -> Vec<T> {
     let baskets = hist(image);
     let mut all_regions: Vec<T> = vec![];
     let mut reg_image: Image<Option<usize>> = image.map( |_| None );
@@ -17,7 +17,7 @@ pub fn detect_regions<T: Incremental + Sized> (image: &Image<u8>) -> Vec<T> {
     return all_regions;
 }
 
-pub fn process_point<T: Incremental + Sized>(
+pub fn process_point<T: Incremental + HasPoints + Sized>(
     p: Point,
     reg_image: &mut Image<Option<usize>>,
     all_regions: &mut Vec<T>) {
@@ -41,10 +41,8 @@ pub fn process_point<T: Incremental + Sized>(
                 reg_image.set_pixel(p.x, p.y, Some(r1_idx));
 
                 r1.merge(r2);
-                if let Some(points) = r2.points() {
-                    for p in points {
-                        reg_image.set_pixel(p.x, p.y, Some(r1_idx));
-                    }
+                for p in r2.points() {
+                    reg_image.set_pixel(p.x, p.y, Some(r1_idx));
                 }
             } else {
                 panic!("failed to get regions - got None");

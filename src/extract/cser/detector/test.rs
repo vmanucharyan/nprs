@@ -1,7 +1,7 @@
 pub use super::detector::*;
 pub use image::Image;
 pub use structures::{Point, Rect};
-pub use extract::cser::{Incremental, Region};
+pub use extract::cser::{Incremental, Region, HasPoints};
 pub use extract::cser::feature::AspectRatio;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,9 +21,11 @@ impl Incremental for TestInc {
     fn merge(&mut self, r: &TestInc) {
         self.points.extend_from_slice(&r.points[..]);
     }
+}
 
-    fn points<'a>(&'a self) -> Option<&'a [Point]> {
-        Some(&self.points[..])
+impl HasPoints for TestInc {
+    fn points<'a>(&'a self) -> &'a [Point] {
+        &self.points[..]
     }
 }
 
@@ -140,7 +142,7 @@ describe! detect_regions {
             process_point::<TestInc>(Point { x: 3, y: 1 }, &mut reg_img, &mut regions);
 
             assert_eq!(reg_img.data(), &expected_data[..]);
-            assert_eq!(regions[0].points().unwrap().len(), 4);
+            assert_eq!(regions[0].points().len(), 4);
         }
 
         it "should merge regions if there are 2 adjacent regions" {
