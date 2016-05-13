@@ -35,21 +35,21 @@ pub fn process_point<T: Incremental + HasPoints + Sized>(
             r.increment(p);
             reg_image.set_pixel(p.x, p.y, Some(r_idx));
         },
-        [r1_idx, r2_idx] => {
-            if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, r2_idx) {
-                r1.increment(p);
-                reg_image.set_pixel(p.x, p.y, Some(r1_idx));
-
-                r1.merge(r2);
-                for p in r2.points() {
+        [r1_idx, rest..] => {
+            all_regions[r1_idx].increment(p);
+            for r_idx in rest {
+                if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, *r_idx) {
+                    r1.increment(p);
                     reg_image.set_pixel(p.x, p.y, Some(r1_idx));
+
+                    r1.merge(r2);
+                    for p in r2.points() {
+                        reg_image.set_pixel(p.x, p.y, Some(r1_idx));
+                    }
+                } else {
+                    panic!("failed to get regions - got None");
                 }
-            } else {
-                panic!("failed to get regions - got None");
             }
-        },
-        _ => {
-            panic!("more than 2 neighbors, don't know how to handle it!");
         }
     }
 }

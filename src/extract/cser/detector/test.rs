@@ -73,17 +73,17 @@ describe! detect_regions {
     describe! process_point {
         before_each {
             let b: Vec<u8> = vec![
-                0, 1, 1, 0,
-                0, 0, 1, 0,
-                2, 2, 0, 0,
-                0, 0, 0, 0,
+                0, 1, 1, 0, 0, 0,
+                0, 0, 1, 0, 0, 0,
+                2, 2, 0, 3, 0, 0,
+                0, 0, 0, 3, 0, 0,
             ];
 
             let data = b.iter()
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
                 .collect();
 
-            let mut reg_img: Image<Option<usize>> = Image::from_data(data, 4, 4);
+            let mut reg_img: Image<Option<usize>> = Image::from_data(data, 6, 4);
             let r1 = TestInc {
                 points: vec![
                     Point { x: 1, y: 0 },
@@ -99,11 +99,18 @@ describe! detect_regions {
                 ]
             };
 
-            let mut regions: Vec<TestInc> = vec![r1.clone(), r2.clone()];
+            let r3 = TestInc {
+                points: vec![
+                    Point { x: 3, y: 2 },
+                    Point { x: 3, y: 3 }
+                ]
+            };
+
+            let mut regions: Vec<TestInc> = vec![r1.clone(), r2.clone(), r3.clone()];
         }
 
         it "should create new region and add it to regions list if there are no adjacent regions" {
-            let new_point = Point { x: 3, y: 2 };
+            let new_point = Point { x: 5, y: 0 };
             let expected_region = TestInc {
                 points: vec![new_point]
             };
@@ -114,32 +121,32 @@ describe! detect_regions {
 
         it "should create new region and draw it on region image if there are no adjacent regions" {
             let b: Vec<u8> = vec![
-                0, 1, 1, 0,
-                0, 0, 1, 0,
-                2, 2, 0, 3,
-                0, 0, 0, 0,
+                0, 1, 1, 0, 0, 4,
+                0, 0, 1, 0, 0, 0,
+                2, 2, 0, 3, 0, 0,
+                0, 0, 0, 3, 0, 0,
             ];
             let expected_data: Vec<Option<usize>> = b.iter()
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
                 .collect();
 
-            process_point::<TestInc>(Point { x: 3, y: 2 }, &mut reg_img, &mut regions);
+            process_point::<TestInc>(Point { x: 5, y: 0 }, &mut reg_img, &mut regions);
 
             assert_eq!(reg_img.data(), &expected_data[..]);
         }
 
         it "should increment region and draw it on regions image if there is only one adjacent region" {
             let b: Vec<u8> = vec![
-                0, 1, 1, 0,
-                0, 0, 1, 1,
-                2, 2, 0, 0,
-                0, 0, 0, 0,
+                1, 1, 1, 0, 0, 0,
+                0, 0, 1, 0, 0, 0,
+                2, 2, 0, 3, 0, 0,
+                0, 0, 0, 3, 0, 0,
             ];
             let expected_data: Vec<Option<usize>> = b.iter()
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
                 .collect();
 
-            process_point::<TestInc>(Point { x: 3, y: 1 }, &mut reg_img, &mut regions);
+            process_point::<TestInc>(Point { x: 0, y: 0 }, &mut reg_img, &mut regions);
 
             assert_eq!(reg_img.data(), &expected_data[..]);
             assert_eq!(regions[0].points().len(), 4);
@@ -147,10 +154,26 @@ describe! detect_regions {
 
         it "should merge regions if there are 2 adjacent regions" {
             let b: Vec<u8> = vec![
-                0, 1, 1, 0,
-                0, 0, 1, 0,
-                1, 1, 1, 0,
-                0, 0, 0, 0,
+                0, 1, 1, 0, 0, 0,
+                0, 1, 1, 0, 0, 0,
+                1, 1, 0, 3, 0, 0,
+                0, 0, 0, 3, 0, 0,
+            ];
+            let expected_data: Vec<Option<usize>> = b.iter()
+                .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
+                .collect();
+
+            process_point::<TestInc>(Point { x: 1, y: 1 }, &mut reg_img, &mut regions);
+
+            assert_eq!(reg_img.data(), &expected_data[..]);
+        }
+
+        it "should merge all regions if there are more than 2 adjacent regions" {
+            let b: Vec<u8> = vec![
+                0, 1, 1, 0, 0, 0,
+                0, 0, 1, 0, 0, 0,
+                1, 1, 1, 1, 0, 0,
+                0, 0, 0, 1, 0, 0,
             ];
             let expected_data: Vec<Option<usize>> = b.iter()
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })

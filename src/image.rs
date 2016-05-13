@@ -35,6 +35,7 @@ impl<T: Copy + Clone> Image<T> {
     }
 
     pub fn set_pixel(&mut self, x: i32, y: i32, value: T) {
+        debug_assert!((x as usize) < self.width && (y as usize) < self.height);
         self.data[(y as usize) * self.width + (x as usize)] = value;
     }
 
