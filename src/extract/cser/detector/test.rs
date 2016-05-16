@@ -1,17 +1,18 @@
 pub use super::detector::*;
 pub use image::Image;
 pub use structures::{Point, Rect};
-pub use extract::cser::{Incremental, Region, HasPoints};
+pub use extract::cser::{Incremental, Region, ExtremalRegion};
 pub use extract::cser::feature::AspectRatio;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestInc {
-    points: Vec<Point>
+    points: Vec<Point>,
+    peaks: Vec<TestInc>
 }
 
 impl Incremental for TestInc {
     fn init(p: Point) -> Self {
-        TestInc { points: vec![p] }
+        TestInc { points: vec![p], peaks: vec![] }
     }
 
     fn increment(&mut self, p: Point) {
@@ -23,9 +24,21 @@ impl Incremental for TestInc {
     }
 }
 
-impl HasPoints for TestInc {
+impl ExtremalRegion for TestInc {
     fn points<'a>(&'a self) -> &'a [Point] {
         &self.points[..]
+    }
+
+    fn weight(&self) -> f32 {
+        ((self.points.len() % 4) as f32) / 4.0f32
+    }
+
+    fn bounds(&self) -> Rect {
+        Rect(Point { x: 0, y: 0 }, Point { x: 1, y: 1 })
+    }
+
+    fn peaks<'a>(&'a self) -> &'a [Self] {
+        &self.peaks[..]
     }
 }
 
@@ -53,6 +66,8 @@ describe! detect_regions {
                 0, 0, 6, 7,
             ];
 
+            let mut neighbors_buf: Vec<usize> = vec![];
+
             let data = b.iter()
                 .map(|x| if x.clone() != 0u8 { Some(x.clone() as usize) } else { None })
                 .collect();
@@ -60,13 +75,21 @@ describe! detect_regions {
             let img: Image<Option<usize>> = Image::from_data(data, 4, 4);
             let reg: Vec<Region> = vec![];
 
-            assert_eq!(find_neighbors(&img, Point { x: 0, y: 0 }).len(), 1);
-            assert_eq!(find_neighbors(&img, Point { x: 2, y: 2 }).len(), 4);
-            assert_eq!(find_neighbors(&img, Point { x: 3, y: 3 }).len(), 2);
-            assert_eq!(find_neighbors(&img, Point { x: 3, y: 1 }).len(), 2);
+            find_neighbors(&img, Point { x: 0, y: 0 }, &mut neighbors_buf);
+            assert_eq!(neighbors_buf.len(), 1);
 
+            find_neighbors(&img, Point { x: 2, y: 2 }, &mut neighbors_buf);
+            assert_eq!(neighbors_buf.len(), 4);
+
+            find_neighbors(&img, Point { x: 3, y: 3 }, &mut neighbors_buf);
+            assert_eq!(neighbors_buf.len(), 2);
+
+            find_neighbors(&img, Point { x: 3, y: 1 }, &mut neighbors_buf);
+            assert_eq!(neighbors_buf.len(), 2);
+
+            find_neighbors(&img, Point { x: 3, y: 3 }, &mut neighbors_buf);
             let expected_points = vec![5, 6];
-            assert_eq!(find_neighbors(&img, Point { x: 3, y: 3 }), expected_points);
+            assert_eq!(neighbors_buf, expected_points);
         }
     }
 
@@ -89,33 +112,38 @@ describe! detect_regions {
                     Point { x: 1, y: 0 },
                     Point { x: 2, y: 0 },
                     Point { x: 2, y: 1 },
-                ]
+                ],
+                peaks: vec![]
             };
 
             let r2 = TestInc {
                 points: vec![
                     Point { x: 0, y: 2 },
                     Point { x: 1, y: 2 }
-                ]
+                ],
+                peaks: vec![]
             };
 
             let r3 = TestInc {
                 points: vec![
                     Point { x: 3, y: 2 },
                     Point { x: 3, y: 3 }
-                ]
+                ],
+                peaks: vec![]
             };
 
             let mut regions: Vec<TestInc> = vec![r1.clone(), r2.clone(), r3.clone()];
+            let mut neighbors_buf: Vec<usize> = vec![];
         }
 
         it "should create new region and add it to regions list if there are no adjacent regions" {
             let new_point = Point { x: 5, y: 0 };
             let expected_region = TestInc {
-                points: vec![new_point]
+                points: vec![new_point],
+                peaks: vec![]
             };
 
-            process_point::<TestInc>(new_point, &mut reg_img, &mut regions);
+            process_point::<TestInc>(new_point, &mut reg_img, &mut regions, &mut neighbors_buf);
             assert_eq!(*regions.last().unwrap(), expected_region);
         }
 
@@ -130,7 +158,7 @@ describe! detect_regions {
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
                 .collect();
 
-            process_point::<TestInc>(Point { x: 5, y: 0 }, &mut reg_img, &mut regions);
+            process_point::<TestInc>(Point { x: 5, y: 0 }, &mut reg_img, &mut regions, &mut neighbors_buf);
 
             assert_eq!(reg_img.data(), &expected_data[..]);
         }
@@ -146,7 +174,7 @@ describe! detect_regions {
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
                 .collect();
 
-            process_point::<TestInc>(Point { x: 0, y: 0 }, &mut reg_img, &mut regions);
+            process_point(Point { x: 0, y: 0 }, &mut reg_img, &mut regions, &mut neighbors_buf);
 
             assert_eq!(reg_img.data(), &expected_data[..]);
             assert_eq!(regions[0].points().len(), 4);
@@ -163,7 +191,7 @@ describe! detect_regions {
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
                 .collect();
 
-            process_point::<TestInc>(Point { x: 1, y: 1 }, &mut reg_img, &mut regions);
+            process_point::<TestInc>(Point { x: 1, y: 1 }, &mut reg_img, &mut regions, &mut neighbors_buf);
 
             assert_eq!(reg_img.data(), &expected_data[..]);
         }
@@ -179,7 +207,7 @@ describe! detect_regions {
                 .map(|x| if x.clone() != 0u8 { Some((x - 1) as usize) } else { None })
                 .collect();
 
-            process_point::<TestInc>(Point { x: 2, y: 2 }, &mut reg_img, &mut regions);
+            process_point::<TestInc>(Point { x: 2, y: 2 }, &mut reg_img, &mut regions, &mut neighbors_buf);
 
             assert_eq!(reg_img.data(), &expected_data[..]);
         }
