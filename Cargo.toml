@@ -17,3 +17,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "nprs-cli"
 path = "src/cli.rs"
+
+[profile.release]
+debug = true
