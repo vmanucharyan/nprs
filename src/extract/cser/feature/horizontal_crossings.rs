@@ -5,7 +5,7 @@ use image::Image;
 use structures::Point;
 use extract::cser::{Feature, Incremental};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct HorizontalCrossings {
     num_crossings: VecDeque<i32>,
     y_top: i32,
@@ -98,4 +98,124 @@ impl Feature for HorizontalCrossings {
 
         out.push(res);
     }
+}
+
+#[test]
+fn merge_with_intersection() {
+
+    //         10                13          15
+    // +-------x-----x-----x-----x-----x-----x--------->
+    //      +-----+-----+-----+-----+
+    //      |  2  |  3  |  2  |  1  |
+    //      +-----+-----------------------+-----+
+    //                  |  4  |  2  |  2  |  2  |
+    //                  +-----+-----+-----+-----+
+
+    let mut hc1 = HorizontalCrossings {
+        num_crossings: vec![2, 3, 2, 1].into_iter().collect(),
+        y_top: 10,
+        y_btm: 13,
+        reg_idx: 1
+    };
+
+    let hc2 = HorizontalCrossings {
+        num_crossings: vec![4, 2, 2, 2].into_iter().collect(),
+        y_top: 12,
+        y_btm: 15,
+        reg_idx: 2
+    };
+
+    let expected_hc = HorizontalCrossings {
+        num_crossings: vec![2, 3, 6, 3, 2, 2].into_iter().collect(),
+        y_top: 10,
+        y_btm: 15,
+        reg_idx: 1
+    };
+
+    let img: Image<u8> = Image::from_data(vec![], 0, 0);
+    let reg_img: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
+
+    hc1.merge(&hc2, &img, &reg_img);
+
+    assert_eq!(hc1, expected_hc);
+}
+
+#[test]
+fn merge_no_intersection() {
+
+    //        10                13          15
+    // +------x-----x-----x-----x-----x-----x--------->
+    //     +-----+-----+-----+-----+
+    //     |  2  |  3  |  2  |  1  |
+    //     +-----+-----+-----+-----------+-----+
+    //                             |  2  |  2  |
+    //                             +-----+-----+
+
+    let mut hc1 = HorizontalCrossings {
+        num_crossings: vec![2, 3, 2, 1].into_iter().collect(),
+        y_top: 10,
+        y_btm: 13,
+        reg_idx: 1
+    };
+
+    let hc2 = HorizontalCrossings {
+        num_crossings: vec![2, 2].into_iter().collect(),
+        y_top: 14,
+        y_btm: 15,
+        reg_idx: 2
+    };
+
+    let expected_hc = HorizontalCrossings {
+        num_crossings: vec![2, 3, 2, 1, 2, 2].into_iter().collect(),
+        y_top: 10,
+        y_btm: 15,
+        reg_idx: 1
+    };
+
+    let img: Image<u8> = Image::from_data(vec![], 0, 0);
+    let reg_image: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
+
+    hc1.merge(&hc2, &img, &reg_image);
+
+    assert_eq!(hc1, expected_hc);
+}
+
+#[test]
+fn merge_included() {
+
+    //        10                            15
+    // +------x-----x-----x-----x-----x-----x--------->
+    //     +-----+-----+-----+-----+-----+-----+
+    //     |  2  |  3  |  2  |  4  |  6  |  2  |
+    //     +-----+-----------------------------+
+    //                 |  4  |  2  |  3  |
+    //                 +-----+-----+-----+
+
+    let mut hc1 = HorizontalCrossings {
+        num_crossings: vec![2, 3, 2, 4, 6, 2].into_iter().collect(),
+        y_top: 10,
+        y_btm: 15,
+        reg_idx: 1
+    };
+
+    let hc2 = HorizontalCrossings {
+        num_crossings: vec![4, 2, 3].into_iter().collect(),
+        y_top: 12,
+        y_btm: 14,
+        reg_idx: 2
+    };
+
+    let expected_hc = HorizontalCrossings {
+        num_crossings: vec![2, 3, 6, 6, 9, 2].into_iter().collect(),
+        y_top: 10,
+        y_btm: 15,
+        reg_idx: 1
+    };
+
+    let img: Image<u8> = Image::from_data(vec![], 0, 0);
+    let reg_image: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
+
+    hc1.merge(&hc2, &img, &reg_image);
+
+    assert_eq!(hc1, expected_hc);
 }
