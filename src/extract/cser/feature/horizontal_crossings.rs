@@ -219,3 +219,43 @@ fn merge_included() {
 
     assert_eq!(hc1, expected_hc);
 }
+
+#[test]
+fn merge_included_reverse() {
+
+    //        10                            15
+    // +------x-----x-----x-----x-----x-----x--------->
+    //     +-----+-----+-----+-----+-----+-----+
+    //     |  2  |  3  |  2  |  4  |  6  |  2  |
+    //     +-----+-----------------------------+
+    //                 |  4  |  2  |  3  |
+    //                 +-----+-----+-----+
+
+    let hc1 = HorizontalCrossings {
+        num_crossings: vec![2, 3, 2, 4, 6, 2].into_iter().collect(),
+        y_top: 10,
+        y_btm: 15,
+        reg_idx: 1
+    };
+
+    let mut hc2 = HorizontalCrossings {
+        num_crossings: vec![4, 2, 3].into_iter().collect(),
+        y_top: 12,
+        y_btm: 14,
+        reg_idx: 2
+    };
+
+    let expected_hc = HorizontalCrossings {
+        num_crossings: vec![2, 3, 6, 6, 9, 2].into_iter().collect(),
+        y_top: 10,
+        y_btm: 15,
+        reg_idx: 2
+    };
+
+    let img: Image<u8> = Image::from_data(vec![], 0, 0);
+    let reg_image: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
+
+    hc2.merge(&hc1, &img, &reg_image);
+
+    assert_eq!(hc2, expected_hc);
+}
