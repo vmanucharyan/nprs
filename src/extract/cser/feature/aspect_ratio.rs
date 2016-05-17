@@ -19,13 +19,13 @@ impl AspectRatio {
 }
 
 impl Incremental for AspectRatio {
-    fn init(p: Point, reg_idx: usize) -> AspectRatio {
+    fn init(p: Point, _: usize) -> AspectRatio {
         AspectRatio {
             bounds: Rect(p, p)
         }
     }
 
-    fn increment(&mut self, p: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point,  _: &Image<u8>, _: &Image<Option<usize>>) {
         self.bounds = self.bounds.expand(Rect(p, p))
     }
 

@@ -6,11 +6,11 @@ use std::env;
 use stopwatch::Stopwatch;
 
 use nprs::image;
-use nprs::extract::cser::feature::{AspectRatio, Compactness, NumHoles};
+use nprs::extract::cser::feature::{AspectRatio, Compactness, NumHoles, HorizontalCrossings};
 use nprs::extract::cser::{FullTrace, PrintTrace, EmptyTrace};
 use nprs::extract::cser;
 
-type Features = (AspectRatio, Compactness, NumHoles);
+type Features = (AspectRatio, Compactness, NumHoles, HorizontalCrossings);
 
 fn main() {
     assert!(env::args().count() == 2, "usage: nprs-cli <file name>");
