@@ -23,9 +23,9 @@ impl<A: Incremental + Feature + Clone> Region<A> {
 }
 
 impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
-    fn init(p: Point) -> Self {
+    fn init(p: Point, reg_idx: usize) -> Self {
         Region {
-            features: A::init(p),
+            features: A::init(p, reg_idx),
             bounds: Rect(p, p),
             points: vec![p],
             weight: -1f32,
@@ -34,8 +34,8 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
         }
     }
 
-    fn increment(&mut self, p: Point, img: &Image<u8>) {
-        self.features.increment(p, img);
+    fn increment(&mut self, p: Point, img: &Image<u8>, reg_img: &Image<Option<usize>>) {
+        self.features.increment(p, img, reg_img);
         self.bounds = self.bounds.expand(Rect(p, p));
         self.weight += 0.1;
         self.points.push(p);
@@ -58,10 +58,10 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
         self.weight = new_weight;
     }
 
-    fn merge(&mut self, r: &Self) {
+    fn merge(&mut self, r: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
         self.bounds = self.bounds.expand(r.bounds);
         self.points.extend_from_slice(&r.points[..]);
-        self.features.merge(&r.features);
+        self.features.merge(&r.features, img, reg_image);
 
         let new_weight = ((self.points.len() % 50) as f32) / 50.0f32;
 
@@ -116,11 +116,17 @@ mod test {
     }
 
     impl Incremental for FakeFeature {
-        fn init(p: Point) -> Self {
+        fn init(p: Point, _: usize) -> Self {
             FakeFeature { init_point: p, incremented: 0, merged: 0 }
         }
-        fn increment(&mut self, _: Point, _: &Image<u8>) { self.incremented += 1; }
-        fn merge(&mut self, _: &FakeFeature) { self.merged += 1; }
+
+        fn increment(&mut self, _: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+            self.incremented += 1;
+        }
+
+        fn merge(&mut self, _: &Self, _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+            self.merged += 1;
+        }
     }
 
     impl Feature for FakeFeature {
@@ -130,7 +136,7 @@ mod test {
     describe! region {
         describe! init {
             before_each {
-                let region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 });
+                let region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 }, 0);
             }
 
             it "should create Region with one point bounds" {
@@ -150,8 +156,10 @@ mod test {
         describe! increment {
             before_each {
                 let img: Image<u8> = Image::from_data(vec![], 0, 0);
-                let mut region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 });
-                region.increment(Point { x: 6, y: 4 }, &img);
+                let reg_img: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
+
+                let mut region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 }, 0);
+                region.increment(Point { x: 6, y: 4 }, &img, &reg_img);
             }
 
             it "should add point to region" {
@@ -178,16 +186,17 @@ mod test {
         describe! merge {
             before_each {
                 let img: Image<u8> = Image::from_data(vec![], 0, 0);
+                let reg_img: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
 
                 let r1p1 = Point { x: 6, y: 3 };
                 let r1p2 = Point { x: 6, y: 4 };
-                let mut r1: Region<FakeFeature> = Incremental::init(r1p1);
-                r1.increment(r1p2, &img);
+                let mut r1: Region<FakeFeature> = Incremental::init(r1p1, 0);
+                r1.increment(r1p2, &img, &reg_img);
 
                 let r2p = Point { x:7, y: 3 };
-                let mut r2: Region<FakeFeature> = Incremental::init(r2p);
+                let mut r2: Region<FakeFeature> = Incremental::init(r2p, 1);
 
-                r1.merge(&r2);
+                r1.merge(&r2, &img, &reg_img);
             }
 
             it "should merge features" {

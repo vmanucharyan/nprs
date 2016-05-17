@@ -5,18 +5,18 @@ use extract::cser::Incremental;
 use super::Feature;
 
 impl<A: Incremental, B: Incremental> Incremental for (A, B) {
-    fn init(p: Point) -> Self {
-        (A::init(p), B::init(p))
+    fn init(p: Point, reg_idx: usize) -> Self {
+        (A::init(p, reg_idx), B::init(p, reg_idx))
     }
 
-    fn increment(&mut self, p: Point, img: &Image<u8>) {
-        self.0.increment(p, img);
-        self.1.increment(p, img);
+    fn increment(&mut self, p: Point,  img: &Image<u8>, reg_img: &Image<Option<usize>>) {
+        self.0.increment(p, img, reg_img);
+        self.1.increment(p, img, reg_img);
     }
 
-    fn merge(&mut self, other: &Self) {
-        self.0.merge(&other.0);
-        self.1.merge(&other.1);
+    fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
+        self.0.merge(&other.0, img, reg_image);
+        self.1.merge(&other.1, img, reg_image);
     }
 }
 
@@ -28,20 +28,20 @@ impl<A: Incremental + Feature, B: Incremental + Feature> Feature for (A, B) {
 }
 
 impl<A: Incremental, B: Incremental, C: Incremental> Incremental for (A, B, C) {
-    fn init(p: Point) -> Self {
-        (A::init(p), B::init(p), C::init(p))
+    fn init(p: Point, reg_idx: usize) -> Self {
+        (A::init(p, reg_idx), B::init(p, reg_idx), C::init(p, reg_idx))
     }
 
-    fn increment(&mut self, p: Point, img: &Image<u8>) {
-        self.0.increment(p, img);
-        self.1.increment(p, img);
-        self.2.increment(p, img);
+    fn increment(&mut self, p: Point,  img: &Image<u8>, reg_img: &Image<Option<usize>>) {
+        self.0.increment(p, img, reg_img);
+        self.1.increment(p, img, reg_img);
+        self.2.increment(p, img, reg_img);
     }
 
-    fn merge(&mut self, other: &Self) {
-        self.0.merge(&other.0);
-        self.1.merge(&other.1);
-        self.2.merge(&other.2);
+    fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
+        self.0.merge(&other.0, img, reg_image);
+        self.1.merge(&other.1, img, reg_image);
+        self.2.merge(&other.2, img, reg_image);
     }
 }
 
@@ -61,22 +61,22 @@ impl<A: Incremental,
      C: Incremental,
      D: Incremental
 > Incremental for (A, B, C, D) {
-    fn init(p: Point) -> Self {
-        (A::init(p), B::init(p), C::init(p), D::init(p))
+    fn init(p: Point, reg_idx: usize) -> Self {
+        (A::init(p, reg_idx), B::init(p, reg_idx), C::init(p, reg_idx), D::init(p, reg_idx))
     }
 
-    fn increment(&mut self,    p: Point, img: &Image<u8>) {
-        self.0.increment(p, img);
-        self.1.increment(p, img);
-        self.2.increment(p, img);
-        self.3.increment(p, img);
+    fn increment(&mut self, p: Point,  img: &Image<u8>, reg_img: &Image<Option<usize>>) {
+        self.0.increment(p, img, reg_img);
+        self.1.increment(p, img, reg_img);
+        self.2.increment(p, img, reg_img);
+        self.3.increment(p, img, reg_img);
     }
 
-    fn merge(&mut self, other: &Self) {
-        self.0.merge(&other.0);
-        self.1.merge(&other.1);
-        self.2.merge(&other.2);
-        self.3.merge(&other.3);
+    fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
+        self.0.merge(&other.0, img, reg_image);
+        self.1.merge(&other.1, img, reg_image);
+        self.2.merge(&other.2, img, reg_image);
+        self.3.merge(&other.3, img, reg_image);
     }
 }
 

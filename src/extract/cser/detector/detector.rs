@@ -33,22 +33,22 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
 
     match &neighbors_buf[..] {
         [] => {
-            all_regions.push(A::init(p));
-            let idx = all_regions.len() - 1;
+            let idx = all_regions.len();
+            all_regions.push(A::init(p, idx));
             reg_image.set_pixel(p.x, p.y, Some(idx));
         },
         [r_idx] => {
             let r = &mut (all_regions[r_idx]);
-            r.increment(p, img);
+            r.increment(p, img, reg_image);
             reg_image.set_pixel(p.x, p.y, Some(r_idx));
         },
         [r1_idx, rest..] => {
-            all_regions[r1_idx].increment(p, img);
+            all_regions[r1_idx].increment(p, img, reg_image);
             for r_idx in rest {
                 if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, *r_idx) {
-                    r1.increment(p, img);
+                    r1.increment(p, img, reg_image);
                     reg_image.set_pixel(p.x, p.y, Some(r1_idx));
-                    r1.merge(r2);
+                    r1.merge(r2, img, reg_image);
                     for p in r2.points() {
                         reg_image.set_pixel(p.x, p.y, Some(r1_idx));
                     }

@@ -11,15 +11,15 @@ pub struct TestInc {
 }
 
 impl Incremental for TestInc {
-    fn init(p: Point) -> Self {
+    fn init(p: Point, _: usize) -> Self {
         TestInc { points: vec![p], peaks: vec![] }
     }
 
-    fn increment(&mut self,    p: Point, _: &Image<u8>) {
+    fn increment(&mut self,    p: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
         self.points.push(p);
     }
 
-    fn merge(&mut self, r: &TestInc) {
+    fn merge(&mut self, r: &TestInc, _: &Image<u8>, _: &Image<Option<usize>>) {
         self.points.extend_from_slice(&r.points[..]);
     }
 }
@@ -58,7 +58,7 @@ describe! detect_regions {
 
     describe! find_neighbors {
         it "should return indexes of adjacent regions" {
-            let r: TestInc = Incremental::init(Point { x: 0, y: 0 });
+            let r: TestInc = Incremental::init(Point { x: 0, y: 0 }, 0);
             let b: Vec<u8> = vec![
                 0, 1, 2, 0,
                 0, 0, 2, 0,

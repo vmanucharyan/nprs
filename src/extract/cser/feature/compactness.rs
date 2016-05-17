@@ -6,32 +6,50 @@ use super::Feature;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Compactness {
-    perimeter: f32,
-    area: f32,
+    perimeter: i32,
+    area: i32,
 }
 
 impl Incremental for Compactness {
-    fn init(_: Point) -> Self {
+    fn init(_: Point, _: usize) -> Self {
         Compactness {
-            perimeter: 1.0f32,
-            area: 1.0f32
+            perimeter: 1,
+            area: 1
         }
     }
 
-    fn increment(&mut self, p: Point, _: &Image<u8>) {
-        let neighbors = vec![
-            Point { x: -1, y:  0 },
-            Point { x:  1, y:  0 },
-            Point { x:  0, y:  1 },
-            Point { x:  0, y: -1 }
+    fn increment(&mut self, p: Point,  img: &Image<u8>, _: &Image<Option<usize>>) {
+        self.area += 1;
+
+        let mut sum = 0;
+
+        let ns = [
+            (p.x - 1, p.y), (p.x, p.y - 1),
+            (p.x + 1, p.y), (p.x, p.y + 1)
         ];
+
+        let pv = img[(p.x, p.y)];
+        for n in ns.iter() {
+            let (x, y) = *n;
+            if img.inside(x, y) {
+                let qv = img[(x, y)];
+                if qv <= pv {
+                    sum += 1;
+                }
+            }
+        }
+
+        self.perimeter += 4 - sum;
     }
 
-    fn merge(&mut self, _: &Self) { }
+    fn merge(&mut self, other: &Self, _: &Image<u8>, _: &Image<Option<usize>>) {
+        self.perimeter += other.perimeter;
+        self.area += other.area;
+    }
 }
 
 impl Feature for Compactness {
     fn value(&self, out: &mut Vec<f32>) {
-        out.push(self.perimeter / self.area);
+        out.push((self.perimeter as f32) / (self.area as f32));
     }
 }

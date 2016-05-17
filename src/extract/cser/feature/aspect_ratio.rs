@@ -19,17 +19,17 @@ impl AspectRatio {
 }
 
 impl Incremental for AspectRatio {
-    fn init(p: Point) -> AspectRatio {
+    fn init(p: Point, reg_idx: usize) -> AspectRatio {
         AspectRatio {
             bounds: Rect(p, p)
         }
     }
 
-    fn increment(&mut self, p: Point, _: &Image<u8>) {
+    fn increment(&mut self, p: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
         self.bounds = self.bounds.expand(Rect(p, p))
     }
 
-    fn merge(&mut self, o: &AspectRatio) {
+    fn merge(&mut self, o: &AspectRatio, _: &Image<u8>, _: &Image<Option<usize>>) {
         self.bounds = self.bounds.expand(o.bounds)
     }
 }
@@ -50,7 +50,7 @@ mod test {
     describe! aspect_ratio {
         describe! init {
             before_each {
-                let ar: AspectRatio = AspectRatio::init(Point { x: 6, y: 3 });
+                let ar: AspectRatio = AspectRatio::init(Point { x: 6, y: 3 }, 0);
             }
 
             it "should create aspect ratio feature with value `1`" {
@@ -70,6 +70,7 @@ mod test {
                     Point { x: 5, y: 4 }
                 ));
                 let img: Image<u8> = Image::from_data(vec![], 0, 0);
+                let reg_img: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
             }
 
             it "should expand correctly when new point is added 1" {
@@ -88,7 +89,7 @@ mod test {
                     Point { x: 6, y: 4 }
                 );
 
-                ar.increment(Point{ x: 6, y: 3 }, &img);
+                ar.increment(Point{ x: 6, y: 3 }, &img, &reg_img);
 
                 assert_eq!(ar.bounds, expected_rect);
                 assert_eq!(ar.value(), 5.0f32 / 3.0f32);
@@ -111,7 +112,7 @@ mod test {
                     Point { x: 5, y: 5 }
                 );
 
-                ar.increment(Point{ x: 1, y: 5 }, &img);
+                ar.increment(Point{ x: 1, y: 5 }, &img, &reg_img);
 
                 assert_eq!(ar.bounds, expected_rect);
                 assert_eq!(ar.value(), 5.0f32 / 4.0f32);
@@ -125,6 +126,7 @@ mod test {
                     Point { x: 5, y: 4 }
                 ));
                 let img: Image<u8> = Image::from_data(vec![], 0, 0);
+                let reg_img: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
             }
 
             it "should merge bounds 1" {
@@ -149,7 +151,7 @@ mod test {
                     Point { x: 5, y: 5 }
                 );
 
-                ar.merge(&ar2);
+                ar.merge(&ar2, &img, &reg_img);
 
                 assert_eq!(ar.bounds, expected_bounds);
                 assert_eq!(ar.value(), 6.0f32 / 4.0f32);
@@ -179,7 +181,7 @@ mod test {
                     Point { x: 7, y: 4 }
                 );
 
-                ar.merge(&ar2);
+                ar.merge(&ar2, &img, &reg_img);
 
                 assert_eq!(ar.bounds, expected_bounds);
                 assert_eq!(ar.value(), 6.0f32 / 5.0f32);
