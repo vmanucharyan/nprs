@@ -58,7 +58,7 @@ describe! detect_regions {
 
     describe! find_neighbors {
         it "should return indexes of adjacent regions" {
-            let r: Region = Incremental::init(Point { x: 0, y: 0 });
+            let r: TestInc = Incremental::init(Point { x: 0, y: 0 });
             let b: Vec<u8> = vec![
                 0, 1, 2, 0,
                 0, 0, 2, 0,
@@ -73,7 +73,7 @@ describe! detect_regions {
                 .collect();
 
             let img: Image<Option<usize>> = Image::from_data(data, 4, 4);
-            let reg: Vec<Region> = vec![];
+            let reg: Vec<TestInc> = vec![];
 
             find_neighbors(&img, Point { x: 0, y: 0 }, &mut neighbors_buf);
             assert_eq!(neighbors_buf.len(), 1);

@@ -6,6 +6,7 @@ authors = ["Vardan Manucharyan <sd003gm@gmail.com>"]
 [dependencies]
 image = "*"
 stopwatch = "0.0.6"
+rustc-serialize = "0.3"
 
 [dev-dependencies]
 stainless = "*"

@@ -6,8 +6,11 @@ use std::env;
 use stopwatch::Stopwatch;
 
 use nprs::image;
+use nprs::extract::cser::feature::{AspectRatio, Compactness};
+use nprs::extract::cser::{FullTrace, PrintTrace, EmptyTrace};
 use nprs::extract::cser;
-use nprs::extract::cser::{FullTrace, EmptyTrace};
+
+type Features = (AspectRatio, Compactness);
 
 fn main() {
     assert!(env::args().count() == 2, "usage: nprs-cli <file name>");
@@ -16,10 +19,10 @@ fn main() {
         let img = image::io::load_from_file(&file_name).unwrap();
 
         let sw = Stopwatch::start_new();
-        let trace = FullTrace { path: "trace" };
-        //let trace = EmptyTrace;
+        //let full_trace = FullTrace { path: "trace" };
+        let trace = EmptyTrace;
 
-        let _: Vec<cser::Region> = cser::detect_regions(&img, &trace);
+        let _: Vec<cser::Region<Features>> = cser::detect_regions(&img, &trace);
 
         println!("region detection took {}ms", sw.elapsed_ms());
     }

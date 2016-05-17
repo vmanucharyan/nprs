@@ -1,3 +1,4 @@
+use super::Feature;
 use extract::cser::Incremental;
 use structures::{Point, Rect};
 
@@ -29,6 +30,12 @@ impl Incremental for AspectRatio {
 
     fn merge(&mut self, o: &AspectRatio) {
         self.bounds = self.bounds.expand(o.bounds)
+    }
+}
+
+impl Feature for AspectRatio {
+    fn value(&self, out: &mut Vec<f32>) {
+        out.push((self.bounds.width() as f32) / (self.bounds.height() as f32));
     }
 }
 

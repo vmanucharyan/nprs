@@ -1,14 +1,6 @@
-use image;
 use image::Image;
-use image::pixel::{ToLuma, ToRgba, Rgba};
 use structures::Point;
 use extract::cser::{Incremental, ExtremalRegion, Trace};
-
-#[derive(Debug, Copy, Clone)]
-pub struct TraceConfig {
-    pub enabled: bool,
-    pub out_dir: &'static str
-}
 
 pub fn detect_regions<A: Incremental + ExtremalRegion + Sized, B: Trace> (image: &Image<u8>, trace: &B) -> Vec<A> {
     let baskets = hist(image);
@@ -24,6 +16,8 @@ pub fn detect_regions<A: Incremental + ExtremalRegion + Sized, B: Trace> (image:
         }
         trace.step(i as i32, &all_regions, &reg_image);
     }
+
+    trace.result(&all_regions, &reg_image);
 
     return all_regions;
 }

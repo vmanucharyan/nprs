@@ -31,6 +31,21 @@ pub trait Trace {
     fn result<A: ExtremalRegion>(&self, all_regions: &[A], reg_img: &Image<Option<usize>>);
 }
 
+pub struct PrintTrace;
+
+impl Trace for PrintTrace {
+    fn step<A: ExtremalRegion>(&self, num: i32, regions: &[A], _: &Image<Option<usize>>) {
+        println!("step {}: found {} regions", num, regions.len());
+    }
+
+    fn result<A: ExtremalRegion>(&self, regions: &[A], _: &Image<Option<usize>>) {
+        println!("Finished.");
+        println!("found {} regions", regions.len());
+        let sum_peaks: usize = regions.iter().map(|reg| reg.peaks().len()).fold(0, |a, b| a + b);
+        println!("total number of peaks: {}", sum_peaks);
+    }
+}
+
 pub struct EmptyTrace;
 
 impl Trace for EmptyTrace {
@@ -52,5 +67,7 @@ impl<'a> Trace for FullTrace<'a> {
         }
     }
 
-    fn result<A: ExtremalRegion>(&self, _: &[A], _: &Image<Option<usize>>) {}
+    fn result<A: ExtremalRegion>(&self, regions: &[A], _: &Image<Option<usize>>) {
+        println!("{}", regions.len());
+    }
 }
