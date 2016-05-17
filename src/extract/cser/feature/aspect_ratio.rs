@@ -1,4 +1,5 @@
 use super::Feature;
+use image::Image;
 use extract::cser::Incremental;
 use structures::{Point, Rect};
 
@@ -24,7 +25,7 @@ impl Incremental for AspectRatio {
         }
     }
 
-    fn increment(&mut self, p: Point) {
+    fn increment(&mut self, p: Point, _: &Image<u8>) {
         self.bounds = self.bounds.expand(Rect(p, p))
     }
 
@@ -41,9 +42,10 @@ impl Feature for AspectRatio {
 
 #[cfg(test)]
 mod test {
+    pub use image::Image;
     pub use extract::cser::Incremental;
-    pub use super::AspectRatio;
     pub use structures::{Point, Rect};
+    pub use super::AspectRatio;
 
     describe! aspect_ratio {
         describe! init {
@@ -67,6 +69,7 @@ mod test {
                     Point { x: 2, y: 2 },
                     Point { x: 5, y: 4 }
                 ));
+                let img: Image<u8> = Image::from_data(vec![], 0, 0);
             }
 
             it "should expand correctly when new point is added 1" {
@@ -85,7 +88,7 @@ mod test {
                     Point { x: 6, y: 4 }
                 );
 
-                ar.increment(Point{ x: 6, y: 3 });
+                ar.increment(Point{ x: 6, y: 3 }, &img);
 
                 assert_eq!(ar.bounds, expected_rect);
                 assert_eq!(ar.value(), 5.0f32 / 3.0f32);
@@ -108,7 +111,7 @@ mod test {
                     Point { x: 5, y: 5 }
                 );
 
-                ar.increment(Point{ x: 1, y: 5 });
+                ar.increment(Point{ x: 1, y: 5 }, &img);
 
                 assert_eq!(ar.bounds, expected_rect);
                 assert_eq!(ar.value(), 5.0f32 / 4.0f32);
@@ -121,6 +124,7 @@ mod test {
                     Point { x: 2, y: 2 },
                     Point { x: 5, y: 4 }
                 ));
+                let img: Image<u8> = Image::from_data(vec![], 0, 0);
             }
 
             it "should merge bounds 1" {

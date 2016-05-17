@@ -9,6 +9,7 @@ extern crate image as pd_image;
 pub mod extract;
 pub mod image;
 pub mod structures;
+pub mod ml;
 
 #[cfg(test)]
 mod test;

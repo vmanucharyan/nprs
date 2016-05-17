@@ -1,8 +1,9 @@
+use image::Image;
 use structures::{Point, Rect};
 
 pub trait Incremental {
     fn init(p: Point) -> Self;
-    fn increment(&mut self, p: Point);
+    fn increment(&mut self,    p: Point, _: &Image<u8>);
     fn merge(&mut self, other: &Self);
 }
 

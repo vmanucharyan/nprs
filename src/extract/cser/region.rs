@@ -1,4 +1,5 @@
 use structures::{Point, Rect};
+use image::Image;
 use super::feature::Feature;
 use super::incremental::{Incremental, ExtremalRegion};
 
@@ -33,8 +34,8 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
         }
     }
 
-    fn increment(&mut self, p: Point) {
-        self.features.increment(p);
+    fn increment(&mut self, p: Point, img: &Image<u8>) {
+        self.features.increment(p, img);
         self.bounds = self.bounds.expand(Rect(p, p));
         self.weight += 0.1;
         self.points.push(p);
@@ -102,9 +103,10 @@ impl<A: Incremental + Feature + Clone> ExtremalRegion for Region<A> {
 #[cfg(test)]
 mod test {
     pub use super::*;
+    pub use image::Image;
     pub use extract::cser::Incremental;
+    pub use extract::cser::feature::Feature;
     pub use structures::{Point, Rect};
-    pub use super::super::feature::Feature;
 
     #[derive(Clone)]
     pub struct FakeFeature {
@@ -117,7 +119,7 @@ mod test {
         fn init(p: Point) -> Self {
             FakeFeature { init_point: p, incremented: 0, merged: 0 }
         }
-        fn increment(&mut self, _: Point) { self.incremented += 1; }
+        fn increment(&mut self, _: Point, _: &Image<u8>) { self.incremented += 1; }
         fn merge(&mut self, _: &FakeFeature) { self.merged += 1; }
     }
 
@@ -147,8 +149,9 @@ mod test {
 
         describe! increment {
             before_each {
+                let img: Image<u8> = Image::from_data(vec![], 0, 0);
                 let mut region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 });
-                region.increment(Point { x: 6, y: 4 });
+                region.increment(Point { x: 6, y: 4 }, &img);
             }
 
             it "should add point to region" {
@@ -174,10 +177,12 @@ mod test {
 
         describe! merge {
             before_each {
+                let img: Image<u8> = Image::from_data(vec![], 0, 0);
+
                 let r1p1 = Point { x: 6, y: 3 };
                 let r1p2 = Point { x: 6, y: 4 };
                 let mut r1: Region<FakeFeature> = Incremental::init(r1p1);
-                r1.increment(r1p2);
+                r1.increment(r1p2, &img);
 
                 let r2p = Point { x:7, y: 3 };
                 let mut r2: Region<FakeFeature> = Incremental::init(r2p);

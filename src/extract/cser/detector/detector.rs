@@ -12,7 +12,7 @@ pub fn detect_regions<A: Incremental + ExtremalRegion + Sized, B: Trace> (image:
     for i in 0..255 {
         let points = &baskets[i];
         for p in points {
-            process_point(p.clone(), &mut reg_image, &mut all_regions, &mut neighbors_buf);
+            process_point(p.clone(), image, &mut reg_image, &mut all_regions, &mut neighbors_buf);
         }
         trace.step(i as i32, &all_regions, &reg_image);
     }
@@ -24,6 +24,7 @@ pub fn detect_regions<A: Incremental + ExtremalRegion + Sized, B: Trace> (image:
 
 pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
     p: Point,
+    img: &Image<u8>,
     reg_image: &mut Image<Option<usize>>,
     all_regions: &mut Vec<A>,
     neighbors_buf: &mut Vec<usize>
@@ -38,14 +39,14 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
         },
         [r_idx] => {
             let r = &mut (all_regions[r_idx]);
-            r.increment(p);
+            r.increment(p, img);
             reg_image.set_pixel(p.x, p.y, Some(r_idx));
         },
         [r1_idx, rest..] => {
-            all_regions[r1_idx].increment(p);
+            all_regions[r1_idx].increment(p, img);
             for r_idx in rest {
                 if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, *r_idx) {
-                    r1.increment(p);
+                    r1.increment(p, img);
                     reg_image.set_pixel(p.x, p.y, Some(r1_idx));
                     r1.merge(r2);
                     for p in r2.points() {

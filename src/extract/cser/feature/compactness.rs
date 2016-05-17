@@ -11,14 +11,14 @@ pub struct Compactness {
 }
 
 impl Incremental for Compactness {
-    fn init(p: Point) -> Self {
+    fn init(_: Point) -> Self {
         Compactness {
-            perimeter: 1f32,
-            area: 1f32
+            perimeter: 1.0f32,
+            area: 1.0f32
         }
     }
 
-    fn increment(&mut self, p: Point) {
+    fn increment(&mut self, p: Point, _: &Image<u8>) {
         let neighbors = vec![
             Point { x: -1, y:  0 },
             Point { x:  1, y:  0 },
