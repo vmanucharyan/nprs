@@ -54,26 +54,44 @@ impl Incremental for HorizontalCrossings {
         }
     }
 
-    fn merge(&mut self, other: &Self, _: &Image<u8>, _: &Image<Option<usize>>) {
-        let y_top = min(self.y_top, other.y_top);
-        let y_btm = max(self.y_btm, other.y_btm);
-
-        let mut nc: VecDeque<i32> = VecDeque::new();
-        nc.resize((y_btm - y_top + 1) as usize, 0);
-
-        for y in y_top...y_btm {
-            if y >= self.y_top && y <= self.y_btm {
-                nc[(y - y_top) as usize] += self.num_crossings[(y - self.y_top) as usize];
+    fn merge(&mut self, other: &HorizontalCrossings, _: &Image<u8>, _: &Image<Option<usize>>) {
+        // intersection area
+        {
+            let a = max(self.y_top, other.y_top);
+            let b = min(self.y_btm, other.y_btm);
+            if b >= a {
+                for y in a...b {
+                    let is = y - self.y_top;
+                    let io = y - other.y_top;
+                    debug_assert!(is >= 0 && io >= 0);
+                    self.num_crossings[is as usize] += other.num_crossings[io as usize];
+                }
             }
+        };
 
-            if y >= other.y_top && y <= other.y_btm {
-                nc[(y - y_top) as usize] += other.num_crossings[(y - other.y_top) as usize];
+        // add to top
+        {
+            let d = self.y_top - other.y_top;
+            if d > 0 {
+                for i in (0..d).rev() {
+                    self.num_crossings.push_front(other.num_crossings[i as usize]);
+                }
             }
-        }
+        };
+        self.y_top = min(self.y_top, other.y_top);
 
-        self.y_top = y_top;
-        self.y_btm = y_btm;
-        self.num_crossings = nc;
+        // add to bottom
+        {
+            let d = other.y_btm - self.y_btm;
+            if d > 0 {
+                for i in (0..d).rev() {
+                    let io = other.num_crossings.len() as i32 - i - 1;
+                    debug_assert!(io >= 0);
+                    self.num_crossings.push_back(other.num_crossings[io as usize]);
+                }
+            }
+        };
+        self.y_btm = max(self.y_btm, other.y_btm);
     }
 }
 
@@ -178,6 +196,46 @@ fn merge_no_intersection() {
     hc1.merge(&hc2, &img, &reg_image);
 
     assert_eq!(hc1, expected_hc);
+}
+
+#[test]
+fn merge_no_intersection_reverse() {
+
+    //        10                13          15
+    // +------x-----x-----x-----x-----x-----x--------->
+    //     +-----+-----+-----+-----+
+    //     |  2  |  3  |  2  |  1  |
+    //     +-----+-----+-----+-----------+-----+
+    //                             |  2  |  2  |
+    //                             +-----+-----+
+
+    let hc1 = HorizontalCrossings {
+        num_crossings: vec![2, 3, 2, 1].into_iter().collect(),
+        y_top: 10,
+        y_btm: 13,
+        reg_idx: 1
+    };
+
+    let mut hc2 = HorizontalCrossings {
+        num_crossings: vec![2, 2].into_iter().collect(),
+        y_top: 14,
+        y_btm: 15,
+        reg_idx: 2
+    };
+
+    let expected_hc = HorizontalCrossings {
+        num_crossings: vec![2, 3, 2, 1, 2, 2].into_iter().collect(),
+        y_top: 10,
+        y_btm: 15,
+        reg_idx: 2
+    };
+
+    let img: Image<u8> = Image::from_data(vec![], 0, 0);
+    let reg_image: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
+
+    hc2.merge(&hc1, &img, &reg_image);
+
+    assert_eq!(hc2, expected_hc);
 }
 
 #[test]

@@ -31,7 +31,7 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
 ) {
     find_neighbors(&reg_image, p.clone(), neighbors_buf);
 
-    match &neighbors_buf[..] {
+    match &mut neighbors_buf[..] {
         [] => {
             let idx = all_regions.len();
             all_regions.push(A::init(p, idx));
@@ -42,19 +42,25 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
             r.increment(p, img, reg_image);
             reg_image.set_pixel(p.x, p.y, Some(r_idx));
         },
-        [r1_idx, rest..] => {
-            all_regions[r1_idx].increment(p, img, reg_image);
-            for r_idx in rest {
-                if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, *r_idx) {
-                    r1.increment(p, img, reg_image);
+        [all..] => {
+            all.sort_by(|a, b| all_regions[*a].points().len().cmp(&all_regions[*b].points().len()));
+            all.reverse();
+            match all {
+                [r1_idx, rest..] => {
+                    all_regions[r1_idx].increment(p, img, reg_image);
                     reg_image.set_pixel(p.x, p.y, Some(r1_idx));
-                    r1.merge(r2, img, reg_image);
-                    for p in r2.points() {
-                        reg_image.set_pixel(p.x, p.y, Some(r1_idx));
+                    for r_idx in rest {
+                        if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, *r_idx) {
+                            r1.merge(r2, img, reg_image);
+                            for p in r2.points() {
+                                reg_image.set_pixel(p.x, p.y, Some(r1_idx));
+                            }
+                        } else {
+                            panic!("failed to index regions");
+                        }
                     }
-                } else {
-                    panic!("failed to get regions - got None");
-                }
+                },
+                _ => panic!("can't happen")
             }
         }
     }
@@ -99,13 +105,11 @@ pub fn hist(image: &Image<u8>) -> Vec<Vec<Point>> {
 }
 
 pub fn index_twice<T>(slc: &mut [T], a: usize, b: usize) -> Option<(&mut T, &mut T)> {
-    if a >= slc.len() || b >= slc.len() {
-        None
-    } else {
-        unsafe {
-            let ar = &mut *(slc.get_unchecked_mut(a) as *mut _);
-            let br = &mut *(slc.get_unchecked_mut(b) as *mut _);
-            Some((ar, br))
-        }
+    debug_assert!(a != b);
+    debug_assert!(a < slc.len() && b < slc.len());
+    unsafe {
+        let ar = &mut *(slc.get_unchecked_mut(a) as *mut _);
+        let br = &mut *(slc.get_unchecked_mut(b) as *mut _);
+        Some((ar, br))
     }
 }

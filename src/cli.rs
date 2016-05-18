@@ -19,10 +19,10 @@ fn main() {
         let img = image::io::load_from_file(&file_name).unwrap();
 
         let sw = Stopwatch::start_new();
-        //let full_trace = FullTrace { path: "trace" };
+        let full_trace = FullTrace { path: "trace" };
         let trace = EmptyTrace;
 
-        let _: Vec<cser::Region<Features>> = cser::detect_regions(&img, &trace);
+        let _: Vec<cser::Region<Features>> = cser::detect_regions(&img, &full_trace);
 
         println!("region detection took {}ms", sw.elapsed_ms());
     }
