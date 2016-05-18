@@ -3,7 +3,7 @@ use structures::Point;
 use extract::cser::Incremental;
 use extract::cser::feature::Feature;
 
-type Matrix = [[bool;3];3];
+type Matrix = [[i32;3];3];
 
 #[derive(Debug, Clone)]
 pub struct NumHoles {
@@ -17,14 +17,14 @@ impl Incremental for NumHoles {
     }
 
     fn increment(&mut self, p: Point,  _: &Image<u8>, reg_image: &Image<Option<usize>>) {
-        let mut m: Matrix = [[false;3];3];
+        let mut m: Matrix = [[0;3];3];
 
         fill_mat(p, &mut m, reg_image, self.reg_idx);
 
-        m[1][1] = false;
+        m[1][1] = 0;
         let (bc1, bc3, bcd) = count_patterns(&m);
 
-        m[1][1] = true;
+        m[1][1] = 1;
         let (ac1, ac3, acd) = count_patterns(&m);
 
         let dc1 = bc1 - ac1;
@@ -50,7 +50,8 @@ fn fill_mat(p: Point, m: &mut Matrix, reg_image: &Image<Option<usize>>, self_reg
         for y in [-1, 0, 1].iter() {
             let q = Point { x: p.x + x, y: p.y + y };
             if reg_image.inside(q.x, q.y) {
-                m[(y + 1) as usize][(x + 1) as usize] = reg_image[(q.x, q.y)] == Some(self_reg_idx);
+                m[(y + 1) as usize][(x + 1) as usize] =
+                    if reg_image[(q.x, q.y)] == Some(self_reg_idx) { 1 } else  { 0 };
             }
         }
     }
@@ -63,18 +64,14 @@ fn count_patterns(m: &Matrix) -> (i32, i32, i32) {
 
     for x in 0..2 {
         for y in 0..2 {
-            let mut count = 0;
-
-            count += if m[y][x] { 1 } else { 0 };
-            count += if m[y + 1][x] { 1 } else { 0 };
-            count += if m[y][x + 1] { 1 } else { 0 };
-            count += if m[y + 1][x + 1] { 1 } else { 0 };
-
+            let count = m[y][x] + m[y + 1][x] + m[y][x + 1] + m[y + 1][x + 1];
             match count {
                 1 => c1 += 1,
                 3 => c3 += 1,
-                2 if (m[y + 1][x + 1] && m[y][x]) || (m[y + 1][x] && m[y][x + 1]) => {
-                    cd += 1
+                2 => {
+                    if (m[y + 1][x + 1] + m[y][x] == 2) || (m[y + 1][x] + m[y][x + 1] == 2) {
+                        cd += 1
+                    }
                 },
                 _ => {}
             }
@@ -96,9 +93,9 @@ fn count_patterns_test_1() {
     // +---------
 
     let m = [
-        [true , false, false],
-        [true , true , false],
-        [true , false, true ]
+        [1, 0, 0],
+        [1, 1, 0],
+        [1, 0, 1]
     ];
     let expected = (1, 2, 1);
 
@@ -119,9 +116,9 @@ fn count_patterns_test_2() {
     // +---------
 
     let m = [
-        [false, false, false],
-        [false, false, false],
-        [false, false, false]
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
     ];
     let expected = (0, 0, 0);
 
@@ -142,9 +139,9 @@ fn count_patterns_test_3() {
     // +---------
 
     let m = [
-        [true , false, false],
-        [false, true , false],
-        [false, false, true ]
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
     ];
     let expected = (2, 0, 2);
 
@@ -165,9 +162,9 @@ fn count_patterns_test_4() {
     // +---------
 
     let m = [
-        [false, true , true ],
-        [false, true , false],
-        [false, false, true ]
+        [0, 1, 1],
+        [0, 1, 0],
+        [0, 0, 1]
     ];
     let expected = (1, 1, 1);
 
@@ -188,9 +185,9 @@ fn count_patterns_test_5() {
     // +---------
 
     let m = [
-        [true , true , true ],
-        [true , true , true ],
-        [true , true , true ]
+        [1, 1, 1],
+        [1, 1, 1],
+        [1, 1, 1]
     ];
     let expected = (0, 0, 0);
 
@@ -214,12 +211,12 @@ fn fill_mat_test() {
     let reg_image: Image<Option<usize>> = Image::from_data(data, 4, 4);
 
     let expected_m = [
-        [false, true , true ],
-        [false, false, false],
-        [false, false, false]
+        [0, 1, 1],
+        [0, 0, 0],
+        [0, 0, 0]
     ];
 
-    let mut actual_m: Matrix = [[false;3];3];
+    let mut actual_m: Matrix = [[0;3];3];
     fill_mat(Point { x: 0, y: 1 }, &mut actual_m, &reg_image, 0);
 
     assert_eq!(actual_m, expected_m);

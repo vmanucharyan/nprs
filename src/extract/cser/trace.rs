@@ -68,6 +68,8 @@ impl<'a> Trace for FullTrace<'a> {
     }
 
     fn result<A: ExtremalRegion>(&self, regions: &[A], _: &Image<Option<usize>>) {
-        println!("{}", regions.len());
+        for r in regions.iter() {
+
+        }
     }
 }

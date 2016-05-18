@@ -22,7 +22,7 @@ fn main() {
         let full_trace = FullTrace { path: "trace" };
         let trace = EmptyTrace;
 
-        let _: Vec<cser::Region<Features>> = cser::detect_regions(&img, &full_trace);
+        let _: Vec<cser::Region<Features>> = cser::detect_regions(&img, &trace);
 
         println!("region detection took {}ms", sw.elapsed_ms());
     }
