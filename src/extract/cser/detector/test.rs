@@ -2,30 +2,29 @@ pub use super::detector::*;
 pub use image::Image;
 pub use structures::{Point, Rect};
 pub use extract::cser::{Incremental, Region, ExtremalRegion};
-pub use extract::cser::Feature;
 pub use extract::cser::feature::AspectRatio;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TestInc<F: Feature> {
+pub struct TestInc {
     points: Vec<Point>,
-    peaks: Vec<(Rect, F)>
+    peaks: Vec<TestInc>
 }
 
-impl<F: Feature> Incremental for TestInc<F> {
+impl Incremental for TestInc {
     fn init(p: Point, _: usize) -> Self {
         TestInc { points: vec![p], peaks: vec![] }
     }
 
-    fn increment(&mut self, p: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+    fn increment(&mut self,    p: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
         self.points.push(p);
     }
 
-    fn merge(&mut self, r: &Self, _: &Image<u8>, _: &Image<Option<usize>>) {
+    fn merge(&mut self, r: &TestInc, _: &Image<u8>, _: &Image<Option<usize>>) {
         self.points.extend_from_slice(&r.points[..]);
     }
 }
 
-impl<F: Feature> ExtremalRegion<F> for TestInc<F> {
+impl ExtremalRegion for TestInc {
     fn points<'a>(&'a self) -> &'a [Point] {
         &self.points[..]
     }
@@ -38,7 +37,7 @@ impl<F: Feature> ExtremalRegion<F> for TestInc<F> {
         Rect(Point { x: 0, y: 0 }, Point { x: 1, y: 1 })
     }
 
-    fn peaks<'a>(&'a self) -> &'a [(Rect, F)] {
+    fn peaks<'a>(&'a self) -> &'a [Self] {
         &self.peaks[..]
     }
 }
@@ -59,7 +58,7 @@ describe! detect_regions {
 
     describe! find_neighbors {
         it "should return indexes of adjacent regions" {
-            let r: TestInc<AspectRatio> = Incremental::init(Point { x: 0, y: 0 }, 0);
+            let r: TestInc = Incremental::init(Point { x: 0, y: 0 }, 0);
             let b: Vec<u8> = vec![
                 0, 1, 2, 0,
                 0, 0, 2, 0,
@@ -74,7 +73,7 @@ describe! detect_regions {
                 .collect();
 
             let img: Image<Option<usize>> = Image::from_data(data, 4, 4);
-            let reg: Vec<TestInc<AspectRatio>> = vec![];
+            let reg: Vec<TestInc> = vec![];
 
             find_neighbors(&img, Point { x: 0, y: 0 }, &mut neighbors_buf);
             assert_eq!(neighbors_buf.len(), 1);
@@ -135,7 +134,7 @@ describe! detect_regions {
                 peaks: vec![]
             };
 
-            let mut regions: Vec<TestInc<AspectRatio>> = vec![r1.clone(), r2.clone(), r3.clone()];
+            let mut regions: Vec<TestInc> = vec![r1.clone(), r2.clone(), r3.clone()];
             let mut neighbors_buf: Vec<usize> = vec![];
         }
 

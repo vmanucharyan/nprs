@@ -3,7 +3,7 @@ use image::Image;
 use extract::cser::Incremental;
 use structures::{Point, Rect};
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone)]
 pub struct AspectRatio {
     bounds: Rect
 }

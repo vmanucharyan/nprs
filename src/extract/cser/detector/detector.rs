@@ -1,11 +1,8 @@
 use image::Image;
 use structures::Point;
-use extract::cser::{Incremental, ExtremalRegion, Trace, Feature};
+use extract::cser::{Incremental, ExtremalRegion, Trace};
 
-pub fn detect_regions<
-    F: Feature, A: Incremental + ExtremalRegion<F> + Sized,
-    B: Trace<F, A>
-> (image: &Image<u8>, trace: &B) -> Vec<A> {
+pub fn detect_regions<A: Incremental + ExtremalRegion + Sized, B: Trace> (image: &Image<u8>, trace: &B) -> Vec<A> {
     let baskets = hist(image);
     let mut all_regions: Vec<A> = vec![];
     let mut reg_image: Image<Option<usize>> = image.map( |_| None );
@@ -25,7 +22,7 @@ pub fn detect_regions<
     return all_regions;
 }
 
-pub fn process_point<F: Feature,  A: Incremental + ExtremalRegion<F> + Sized>(
+pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
     p: Point,
     img: &Image<u8>,
     reg_image: &mut Image<Option<usize>>,

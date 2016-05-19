@@ -3,7 +3,6 @@ mod incremental;
 mod detector;
 mod trace;
 pub mod feature;
-mod traced_region;
 
 pub use self::detector::detector::{detect_regions};
 pub use self::incremental::{Incremental, ExtremalRegion};
