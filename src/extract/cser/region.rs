@@ -11,7 +11,7 @@ pub struct Region<A: Incremental + Feature + Clone> {
     bounds: Rect,
     points: Vec<Point>,
     weight: f32,
-    peaks: Vec<Region<A>>,
+    peaks: Vec<(Rect, A)>,
     prev_weight: f32
 }
 
@@ -43,15 +43,7 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
         let new_weight = ((self.points.len() % 50) as f32) / 50.0f32;
 
         if self.is_peak(new_weight) {
-            let clone = Region {
-                features: self.features.clone(),
-                bounds: self.bounds.clone(),
-                points: vec![],
-                weight: self.weight,
-                peaks: vec![],
-                prev_weight: self.prev_weight,
-            };
-            self.peaks.push(clone);
+            self.peaks.push((self.bounds, self.features.clone()));
         }
 
         self.prev_weight = self.weight;
@@ -66,15 +58,7 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
         let new_weight = ((self.points.len() % 50) as f32) / 50.0f32;
 
         if self.is_peak(new_weight) {
-            let clone = Region {
-                features: self.features.clone(),
-                bounds: self.bounds.clone(),
-                points: vec![],
-                weight: self.weight,
-                peaks: vec![],
-                prev_weight: self.prev_weight,
-            };
-            self.peaks.push(clone);
+            self.peaks.push((self.bounds, self.features.clone()));
         }
 
         self.prev_weight = self.weight;
@@ -83,6 +67,8 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
 }
 
 impl<A: Incremental + Feature + Clone> ExtremalRegion for Region<A> {
+    type F = A;
+
     fn points<'a> (&'a self) -> &'a [Point] {
         &self.points[..]
     }
@@ -95,7 +81,7 @@ impl<A: Incremental + Feature + Clone> ExtremalRegion for Region<A> {
         self.bounds
     }
 
-    fn peaks<'a> (&'a self) -> &'a [Self] {
+    fn peaks<'a> (&'a self) -> &'a [(Rect, A)] {
         &self.peaks[..]
     }
 }

@@ -8,8 +8,10 @@ pub trait Incremental {
 }
 
 pub trait ExtremalRegion : Sized {
+    type F;
+
     fn points<'a> (&'a self) -> &'a [Point];
     fn bounds(&self) -> Rect;
-    fn peaks<'a>(&'a self) -> &'a [Self];
+    fn peaks<'a>(&'a self) -> &'a [(Rect, Self::F)];
     fn weight(&self) -> f32;
 }

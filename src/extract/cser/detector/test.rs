@@ -7,7 +7,7 @@ pub use extract::cser::feature::AspectRatio;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TestInc {
     points: Vec<Point>,
-    peaks: Vec<TestInc>
+    peaks: Vec<(Rect, AspectRatio)>
 }
 
 impl Incremental for TestInc {
@@ -15,7 +15,7 @@ impl Incremental for TestInc {
         TestInc { points: vec![p], peaks: vec![] }
     }
 
-    fn increment(&mut self,    p: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
         self.points.push(p);
     }
 
@@ -25,6 +25,8 @@ impl Incremental for TestInc {
 }
 
 impl ExtremalRegion for TestInc {
+    type F = AspectRatio;
+
     fn points<'a>(&'a self) -> &'a [Point] {
         &self.points[..]
     }
@@ -37,7 +39,7 @@ impl ExtremalRegion for TestInc {
         Rect(Point { x: 0, y: 0 }, Point { x: 1, y: 1 })
     }
 
-    fn peaks<'a>(&'a self) -> &'a [Self] {
+    fn peaks<'a>(&'a self) -> &'a [(Rect, AspectRatio)] {
         &self.peaks[..]
     }
 }
