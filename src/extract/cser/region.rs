@@ -53,10 +53,10 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
         self.weight = new_weight;
     }
 
-    fn merge(&mut self, r: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
+    fn merge(&mut self, r: &Self, thres: i32, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
         self.bounds = self.bounds.expand(r.bounds);
         self.points.extend_from_slice(&r.points[..]);
-        self.features.merge(&r.features, img, reg_image);
+        self.features.merge(&r.features, thres, img, reg_image);
 
         let new_weight = ((self.points.len() % 50) as f32) / 50.0f32;
 
@@ -117,7 +117,7 @@ mod test {
             self.incremented += 1;
         }
 
-        fn merge(&mut self, _: &Self, _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+        fn merge(&mut self, _: &Self, thres: i32, _: &Image<u8>, reg_img: &Image<Option<usize>>) {
             self.merged += 1;
         }
     }
@@ -189,7 +189,7 @@ mod test {
                 let r2p = Point { x:7, y: 3 };
                 let mut r2: Region<FakeFeature> = Incremental::init(r2p, 1, 0);
 
-                r1.merge(&r2, &img, &reg_img);
+                r1.merge(&r2, 0, &img, &reg_img);
             }
 
             it "should merge features" {

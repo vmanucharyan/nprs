@@ -29,7 +29,7 @@ impl Incremental for AspectRatio {
         self.bounds = self.bounds.expand(Rect(p, p))
     }
 
-    fn merge(&mut self, o: &AspectRatio, _: &Image<u8>, _: &Image<Option<usize>>) {
+    fn merge(&mut self, o: &AspectRatio, _: i32, _: &Image<u8>, _: &Image<Option<usize>>) {
         self.bounds = self.bounds.expand(o.bounds)
     }
 }
@@ -151,7 +151,7 @@ mod test {
                     Point { x: 5, y: 5 }
                 );
 
-                ar.merge(&ar2, &img, &reg_img);
+                ar.merge(&ar2, 0, &img, &reg_img);
 
                 assert_eq!(ar.bounds, expected_bounds);
                 assert_eq!(ar.value(), 6.0f32 / 4.0f32);
@@ -181,7 +181,7 @@ mod test {
                     Point { x: 7, y: 4 }
                 );
 
-                ar.merge(&ar2, &img, &reg_img);
+                ar.merge(&ar2, 0, &img, &reg_img);
 
                 assert_eq!(ar.bounds, expected_bounds);
                 assert_eq!(ar.value(), 6.0f32 / 5.0f32);

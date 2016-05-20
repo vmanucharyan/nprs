@@ -79,7 +79,7 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
                     reg_image.set_pixel(p.x, p.y, Some(r1_idx));
                     for r_idx in rest {
                         if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, *r_idx) {
-                            r1.merge(r2, img, reg_image);
+                            r1.merge(r2, thres, img, reg_image);
                             for p in r2.points() {
                                 reg_image.set_pixel(p.x, p.y, Some(r1_idx));
                             }

@@ -42,7 +42,7 @@ impl Incremental for Compactness {
         self.perimeter += 4 - sum;
     }
 
-    fn merge(&mut self, other: &Self, _: &Image<u8>, _: &Image<Option<usize>>) {
+    fn merge(&mut self, other: &Self, _: i32, _: &Image<u8>, _: &Image<Option<usize>>) {
         self.perimeter += other.perimeter;
         self.area += other.area;
     }

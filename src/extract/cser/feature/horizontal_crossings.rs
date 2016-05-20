@@ -54,7 +54,7 @@ impl Incremental for HorizontalCrossings {
         }
     }
 
-    fn merge(&mut self, other: &HorizontalCrossings, _: &Image<u8>, _: &Image<Option<usize>>) {
+    fn merge(&mut self, other: &HorizontalCrossings, _: i32, _: &Image<u8>, _: &Image<Option<usize>>) {
         // intersection area
         {
             let a = max(self.y_top, other.y_top);
@@ -153,7 +153,7 @@ fn merge_with_intersection() {
     let img: Image<u8> = Image::from_data(vec![], 0, 0);
     let reg_img: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
 
-    hc1.merge(&hc2, &img, &reg_img);
+    hc1.merge(&hc2, 0, &img, &reg_img);
 
     assert_eq!(hc1, expected_hc);
 }
@@ -193,7 +193,7 @@ fn merge_no_intersection() {
     let img: Image<u8> = Image::from_data(vec![], 0, 0);
     let reg_image: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
 
-    hc1.merge(&hc2, &img, &reg_image);
+    hc1.merge(&hc2, 0, &img, &reg_image);
 
     assert_eq!(hc1, expected_hc);
 }
@@ -233,7 +233,7 @@ fn merge_no_intersection_reverse() {
     let img: Image<u8> = Image::from_data(vec![], 0, 0);
     let reg_image: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
 
-    hc2.merge(&hc1, &img, &reg_image);
+    hc2.merge(&hc1, 0, &img, &reg_image);
 
     assert_eq!(hc2, expected_hc);
 }
@@ -273,7 +273,7 @@ fn merge_included() {
     let img: Image<u8> = Image::from_data(vec![], 0, 0);
     let reg_image: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
 
-    hc1.merge(&hc2, &img, &reg_image);
+    hc1.merge(&hc2, 0, &img, &reg_image);
 
     assert_eq!(hc1, expected_hc);
 }
@@ -313,7 +313,7 @@ fn merge_included_reverse() {
     let img: Image<u8> = Image::from_data(vec![], 0, 0);
     let reg_image: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
 
-    hc2.merge(&hc1, &img, &reg_image);
+    hc2.merge(&hc1, 0, &img, &reg_image);
 
     assert_eq!(hc2, expected_hc);
 }

@@ -14,9 +14,9 @@ impl<A: Incremental, B: Incremental> Incremental for (A, B) {
         self.1.increment(p, thres, img, reg_img);
     }
 
-    fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
-        self.0.merge(&other.0, img, reg_image);
-        self.1.merge(&other.1, img, reg_image);
+    fn merge(&mut self, other: &Self, thres: i32, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
+        self.0.merge(&other.0, thres, img, reg_image);
+        self.1.merge(&other.1, thres, img, reg_image);
     }
 }
 
@@ -38,10 +38,10 @@ impl<A: Incremental, B: Incremental, C: Incremental> Incremental for (A, B, C) {
         self.2.increment(p, thres, img, reg_img);
     }
 
-    fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
-        self.0.merge(&other.0, img, reg_image);
-        self.1.merge(&other.1, img, reg_image);
-        self.2.merge(&other.2, img, reg_image);
+    fn merge(&mut self, other: &Self, thres: i32, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
+        self.0.merge(&other.0, thres, img, reg_image);
+        self.1.merge(&other.1, thres, img, reg_image);
+        self.2.merge(&other.2, thres, img, reg_image);
     }
 }
 
@@ -77,11 +77,11 @@ impl<A: Incremental,
         self.3.increment(p, thres, img, reg_img);
     }
 
-    fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
-        self.0.merge(&other.0, img, reg_image);
-        self.1.merge(&other.1, img, reg_image);
-        self.2.merge(&other.2, img, reg_image);
-        self.3.merge(&other.3, img, reg_image);
+    fn merge(&mut self, other: &Self, thres: i32, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
+        self.0.merge(&other.0, thres, img, reg_image);
+        self.1.merge(&other.1, thres, img, reg_image);
+        self.2.merge(&other.2, thres, img, reg_image);
+        self.3.merge(&other.3, thres, img, reg_image);
     }
 }
 

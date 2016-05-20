@@ -34,7 +34,7 @@ impl Incremental for NumHoles {
         self.genus = 0.25f32 * ((dc1 - dc3 + 2 * dcd) as f32);
     }
 
-    fn merge(&mut self, other: &Self, _: &Image<u8>, _: &Image<Option<usize>>) {
+    fn merge(&mut self, other: &Self, _: i32, _: &Image<u8>, _: &Image<Option<usize>>) {
         self.genus += other.genus;
     }
 }

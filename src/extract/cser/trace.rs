@@ -132,7 +132,7 @@ impl<R: ExtremalRegion + Incremental + Clone> Incremental for TracedRegion<R> {
         self.region.increment(p, thres, img, reg_img);
     }
 
-    fn merge(&mut self, other: &Self, img: &Image<u8>, reg_img: &Image<Option<usize>>) {
-        self.region.merge(&other.region, img, reg_img);
+    fn merge(&mut self, other: &Self, thres: i32, img: &Image<u8>, reg_img: &Image<Option<usize>>) {
+        self.region.merge(&other.region, thres, img, reg_img);
     }
 }

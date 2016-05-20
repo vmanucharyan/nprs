@@ -20,7 +20,7 @@ impl Incremental for TestInc {
         self.points.push(p);
     }
 
-    fn merge(&mut self, r: &TestInc, _: &Image<u8>, _: &Image<Option<usize>>) {
+    fn merge(&mut self, r: &TestInc, thres: i32, _: &Image<u8>, _: &Image<Option<usize>>) {
         self.points.extend_from_slice(&r.points[..]);
     }
 }
