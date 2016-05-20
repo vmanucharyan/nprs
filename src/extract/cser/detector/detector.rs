@@ -62,7 +62,7 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
     match &mut neighbors_buf[..] {
         [] => {
             let idx = all_regions.len();
-            all_regions.push(A::init(p, idx));
+            all_regions.push(A::init(p, idx, thres));
             reg_image.set_pixel(p.x, p.y, Some(idx));
         },
         [r_idx] => {

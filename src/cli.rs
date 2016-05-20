@@ -7,9 +7,8 @@ use stopwatch::Stopwatch;
 
 use nprs::image;
 use nprs::extract::cser::feature::{AspectRatio, Compactness, NumHoles, HorizontalCrossings};
-use nprs::extract::cser::{FullTrace, PrintTrace, EmptyTrace};
-use nprs::extract::cser::{Region, TracedRegion, Feature, CserDetector};
-use nprs::extract::cser;
+use nprs::extract::cser::{FullTrace, EmptyTrace};
+use nprs::extract::cser::{Region, TracedRegion, CserDetector};
 use nprs::extract::RegionDetector;
 
 type Features = (AspectRatio, Compactness, NumHoles, HorizontalCrossings);

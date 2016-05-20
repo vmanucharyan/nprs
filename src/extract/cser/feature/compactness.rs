@@ -11,14 +11,14 @@ pub struct Compactness {
 }
 
 impl Incremental for Compactness {
-    fn init(_: Point, _: usize) -> Self {
+    fn init(_: Point, _: usize, _: i32) -> Self {
         Compactness {
             perimeter: 1,
             area: 1
         }
     }
 
-    fn increment(&mut self, p: Point, thres: i32,   img: &Image<u8>,  _: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point, _: i32,   img: &Image<u8>,  _: &Image<Option<usize>>) {
         self.area += 1;
 
         let mut sum = 0;

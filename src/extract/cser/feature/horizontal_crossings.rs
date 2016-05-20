@@ -14,7 +14,7 @@ pub struct HorizontalCrossings {
 }
 
 impl Incremental for HorizontalCrossings {
-    fn init(p: Point, reg_idx: usize) -> Self {
+    fn init(p: Point, reg_idx: usize, _: i32) -> Self {
         let mut nc: VecDeque<i32> = VecDeque::new();
         nc.push_back(2);
 
@@ -26,7 +26,7 @@ impl Incremental for HorizontalCrossings {
         }
     }
 
-    fn increment(&mut self, p: Point, thres: i32,   _: &Image<u8>,  reg_image: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point, _: i32,   _: &Image<u8>,  reg_image: &Image<Option<usize>>) {
         let mut transitions = 0;
 
         if (reg_image.inside(p.x - 1, p.y)) && (reg_image[(p.x - 1, p.y)] == Some(self.reg_idx)) {

@@ -6,6 +6,7 @@ use super::cser::Trace;
 pub trait ExtremalRegion : Sized {
     type F: Feature + Sized;
 
+    fn threshold(&self) -> i32;
     fn points<'a> (&'a self) -> &'a [Point];
     fn bounds(&self) -> Rect;
     fn peaks<'a>(&'a self) -> &'a [(Rect, Self::F)];

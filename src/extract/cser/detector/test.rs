@@ -12,7 +12,7 @@ pub struct TestInc {
 }
 
 impl Incremental for TestInc {
-    fn init(p: Point, _: usize) -> Self {
+    fn init(p: Point, _: usize, thres: i32) -> Self {
         TestInc { points: vec![p], peaks: vec![] }
     }
 
@@ -27,6 +27,10 @@ impl Incremental for TestInc {
 
 impl ExtremalRegion for TestInc {
     type F = AspectRatio;
+
+    fn threshold(&self) -> i32 {
+        0
+    }
 
     fn points<'a>(&'a self) -> &'a [Point] {
         &self.points[..]
@@ -61,7 +65,7 @@ describe! detect_regions {
 
     describe! find_neighbors {
         it "should return indexes of adjacent regions" {
-            let r: TestInc = Incremental::init(Point { x: 0, y: 0 }, 0);
+            let r: TestInc = Incremental::init(Point { x: 0, y: 0 }, 0, 0);
             let b: Vec<u8> = vec![
                 0, 1, 2, 0,
                 0, 0, 2, 0,

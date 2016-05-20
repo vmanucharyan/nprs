@@ -13,7 +13,8 @@ pub struct Region<A: Incremental + Feature + Clone> {
     points: Vec<Point>,
     weight: f32,
     peaks: Vec<(Rect, A)>,
-    prev_weight: f32
+    prev_weight: f32,
+    threshold: i32
 }
 
 impl<A: Incremental + Feature + Clone> Region<A> {
@@ -24,14 +25,15 @@ impl<A: Incremental + Feature + Clone> Region<A> {
 }
 
 impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
-    fn init(p: Point, reg_idx: usize) -> Self {
+    fn init(p: Point, reg_idx: usize, thres: i32) -> Self {
         Region {
-            features: A::init(p, reg_idx),
+            features: A::init(p, reg_idx, thres),
             bounds: Rect(p, p),
             points: vec![p],
             weight: -1f32,
+            peaks: vec![],
             prev_weight: -1f32,
-            peaks: vec![]
+            threshold: thres
         }
     }
 
@@ -70,6 +72,10 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
 impl<A: Incremental + Feature + Clone> ExtremalRegion for Region<A> {
     type F = A;
 
+    fn threshold(&self) -> i32 {
+        self.threshold
+    }
+
     fn points<'a> (&'a self) -> &'a [Point] {
         &self.points[..]
     }
@@ -103,7 +109,7 @@ mod test {
     }
 
     impl Incremental for FakeFeature {
-        fn init(p: Point, _: usize) -> Self {
+        fn init(p: Point, _: usize, thres: i32) -> Self {
             FakeFeature { init_point: p, incremented: 0, merged: 0 }
         }
 
@@ -123,7 +129,7 @@ mod test {
     describe! region {
         describe! init {
             before_each {
-                let region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 }, 0);
+                let region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 }, 0, 0);
             }
 
             it "should create Region with one point bounds" {
@@ -145,7 +151,7 @@ mod test {
                 let img: Image<u8> = Image::from_data(vec![], 0, 0);
                 let reg_img: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
 
-                let mut region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 }, 0);
+                let mut region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 }, 0, 0);
                 region.increment(Point { x: 6, y: 4 }, 0, &img, &reg_img);
             }
 
@@ -177,11 +183,11 @@ mod test {
 
                 let r1p1 = Point { x: 6, y: 3 };
                 let r1p2 = Point { x: 6, y: 4 };
-                let mut r1: Region<FakeFeature> = Incremental::init(r1p1, 0);
+                let mut r1: Region<FakeFeature> = Incremental::init(r1p1, 0, 0);
                 r1.increment(r1p2, 0, &img, &reg_img);
 
                 let r2p = Point { x:7, y: 3 };
-                let mut r2: Region<FakeFeature> = Incremental::init(r2p, 1);
+                let mut r2: Region<FakeFeature> = Incremental::init(r2p, 1, 0);
 
                 r1.merge(&r2, &img, &reg_img);
             }

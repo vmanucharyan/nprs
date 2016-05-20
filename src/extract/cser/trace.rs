@@ -80,9 +80,7 @@ impl<'a, R: ExtremalRegion + Clone> Trace<TracedRegion<R>> for FullTrace<'a, R> 
     }
 
     fn result(&self, regions: &[TracedRegion<R>], _: &Image<Option<usize>>) {
-        for r in regions.iter() {
-
-        }
+        for _ in regions.iter() {}
     }
 }
 
@@ -100,6 +98,10 @@ pub struct RegionSnapshot<F: Feature> {
 
 impl<R: ExtremalRegion + Clone> ExtremalRegion for TracedRegion<R> {
     type F = R::F;
+
+    fn threshold(&self) -> i32 {
+        self.region.threshold()
+    }
 
     fn points<'a> (&'a self) -> &'a [Point] {
         &self.region.points()
@@ -119,9 +121,9 @@ impl<R: ExtremalRegion + Clone> ExtremalRegion for TracedRegion<R> {
 }
 
 impl<R: ExtremalRegion + Incremental + Clone> Incremental for TracedRegion<R> {
-    fn init(p: Point, reg_idx: usize) -> Self {
+    fn init(p: Point, reg_idx: usize, thres: i32) -> Self {
         TracedRegion {
-            region: Incremental::init(p, reg_idx),
+            region: Incremental::init(p, reg_idx, thres),
             prev_regions: vec![]
         }
     }

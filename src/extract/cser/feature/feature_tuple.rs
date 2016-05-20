@@ -5,8 +5,8 @@ use extract::cser::Incremental;
 use super::Feature;
 
 impl<A: Incremental, B: Incremental> Incremental for (A, B) {
-    fn init(p: Point, reg_idx: usize) -> Self {
-        (A::init(p, reg_idx), B::init(p, reg_idx))
+    fn init(p: Point, reg_idx: usize, thres: i32) -> Self {
+        (A::init(p, reg_idx, thres), B::init(p, reg_idx, thres))
     }
 
     fn increment(&mut self, p: Point, thres: i32, img: &Image<u8>,  reg_img: &Image<Option<usize>>) {
@@ -28,8 +28,8 @@ impl<A: Incremental + Feature, B: Incremental + Feature> Feature for (A, B) {
 }
 
 impl<A: Incremental, B: Incremental, C: Incremental> Incremental for (A, B, C) {
-    fn init(p: Point, reg_idx: usize) -> Self {
-        (A::init(p, reg_idx), B::init(p, reg_idx), C::init(p, reg_idx))
+    fn init(p: Point, reg_idx: usize, thres: i32) -> Self {
+        (A::init(p, reg_idx, thres), B::init(p, reg_idx, thres), C::init(p, reg_idx, thres))
     }
 
     fn increment(&mut self, p: Point, thres: i32,   img: &Image<u8>,  reg_img: &Image<Option<usize>>) {
@@ -61,8 +61,13 @@ impl<A: Incremental,
      C: Incremental,
      D: Incremental
 > Incremental for (A, B, C, D) {
-    fn init(p: Point, reg_idx: usize) -> Self {
-        (A::init(p, reg_idx), B::init(p, reg_idx), C::init(p, reg_idx), D::init(p, reg_idx))
+    fn init(p: Point, reg_idx: usize, thres: i32) -> Self {
+        (
+            A::init(p, reg_idx, thres),
+            B::init(p, reg_idx, thres),
+            C::init(p, reg_idx, thres),
+            D::init(p, reg_idx, thres)
+        )
     }
 
     fn increment(&mut self, p: Point, thres: i32, img: &Image<u8>,  reg_img: &Image<Option<usize>>) {

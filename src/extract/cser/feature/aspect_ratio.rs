@@ -19,13 +19,13 @@ impl AspectRatio {
 }
 
 impl Incremental for AspectRatio {
-    fn init(p: Point, _: usize) -> AspectRatio {
+    fn init(p: Point, _: usize, _: i32) -> AspectRatio {
         AspectRatio {
             bounds: Rect(p, p)
         }
     }
 
-    fn increment(&mut self, p: Point, thres: i32,   _: &Image<u8>,  _: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point, _: i32,  _: &Image<u8>,  _: &Image<Option<usize>>) {
         self.bounds = self.bounds.expand(Rect(p, p))
     }
 
@@ -50,7 +50,7 @@ mod test {
     describe! aspect_ratio {
         describe! init {
             before_each {
-                let ar: AspectRatio = AspectRatio::init(Point { x: 6, y: 3 }, 0);
+                let ar: AspectRatio = AspectRatio::init(Point { x: 6, y: 3 }, 0, 0);
             }
 
             it "should create aspect ratio feature with value `1`" {

@@ -12,11 +12,11 @@ pub struct NumHoles {
 }
 
 impl Incremental for NumHoles {
-    fn init(_: Point, reg_idx: usize) -> Self {
+    fn init(_: Point, reg_idx: usize, _: i32) -> Self {
         NumHoles { genus: 0.0f32, reg_idx: reg_idx }
     }
 
-    fn increment(&mut self, p: Point, thres: i32,   _: &Image<u8>,  reg_image: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point, _: i32,   _: &Image<u8>,  reg_image: &Image<Option<usize>>) {
         let mut m: Matrix = [[0;3];3];
 
         fill_mat(p, &mut m, reg_image, self.reg_idx);
