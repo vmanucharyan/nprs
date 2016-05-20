@@ -9,9 +9,9 @@ impl<A: Incremental, B: Incremental> Incremental for (A, B) {
         (A::init(p, reg_idx), B::init(p, reg_idx))
     }
 
-    fn increment(&mut self, p: Point,  img: &Image<u8>, reg_img: &Image<Option<usize>>) {
-        self.0.increment(p, img, reg_img);
-        self.1.increment(p, img, reg_img);
+    fn increment(&mut self, p: Point, thres: i32, img: &Image<u8>,  reg_img: &Image<Option<usize>>) {
+        self.0.increment(p, thres, img, reg_img);
+        self.1.increment(p, thres, img, reg_img);
     }
 
     fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
@@ -32,10 +32,10 @@ impl<A: Incremental, B: Incremental, C: Incremental> Incremental for (A, B, C) {
         (A::init(p, reg_idx), B::init(p, reg_idx), C::init(p, reg_idx))
     }
 
-    fn increment(&mut self, p: Point,  img: &Image<u8>, reg_img: &Image<Option<usize>>) {
-        self.0.increment(p, img, reg_img);
-        self.1.increment(p, img, reg_img);
-        self.2.increment(p, img, reg_img);
+    fn increment(&mut self, p: Point, thres: i32,   img: &Image<u8>,  reg_img: &Image<Option<usize>>) {
+        self.0.increment(p, thres, img, reg_img);
+        self.1.increment(p, thres, img, reg_img);
+        self.2.increment(p, thres, img, reg_img);
     }
 
     fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
@@ -65,11 +65,11 @@ impl<A: Incremental,
         (A::init(p, reg_idx), B::init(p, reg_idx), C::init(p, reg_idx), D::init(p, reg_idx))
     }
 
-    fn increment(&mut self, p: Point,  img: &Image<u8>, reg_img: &Image<Option<usize>>) {
-        self.0.increment(p, img, reg_img);
-        self.1.increment(p, img, reg_img);
-        self.2.increment(p, img, reg_img);
-        self.3.increment(p, img, reg_img);
+    fn increment(&mut self, p: Point, thres: i32, img: &Image<u8>,  reg_img: &Image<Option<usize>>) {
+        self.0.increment(p, thres, img, reg_img);
+        self.1.increment(p, thres, img, reg_img);
+        self.2.increment(p, thres, img, reg_img);
+        self.3.increment(p, thres, img, reg_img);
     }
 
     fn merge(&mut self, other: &Self, img: &Image<u8>, reg_image: &Image<Option<usize>>) {

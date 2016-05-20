@@ -18,7 +18,7 @@ impl Incremental for Compactness {
         }
     }
 
-    fn increment(&mut self, p: Point,  img: &Image<u8>, _: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point, thres: i32,   img: &Image<u8>,  _: &Image<Option<usize>>) {
         self.area += 1;
 
         let mut sum = 0;

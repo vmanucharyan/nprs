@@ -4,7 +4,8 @@ use image;
 use image::Image;
 use image::pixel::{ToLuma, ToRgba, Rgba};
 use structures::{Point, Rect};
-use super::{ExtremalRegion, Incremental, Feature};
+use extract::ExtremalRegion;
+use super::{Incremental, Feature};
 
 impl ToLuma for Option<usize> {
     fn to_luma(&self) -> u8 {
@@ -125,8 +126,8 @@ impl<R: ExtremalRegion + Incremental + Clone> Incremental for TracedRegion<R> {
         }
     }
 
-    fn increment(&mut self, p: Point,  img: &Image<u8>, reg_img: &Image<Option<usize>>) {
-        self.region.increment(p, img, reg_img);
+    fn increment(&mut self, p: Point, thres: i32, img: &Image<u8>,  reg_img: &Image<Option<usize>>) {
+        self.region.increment(p, thres, img, reg_img);
     }
 
     fn merge(&mut self, other: &Self, img: &Image<u8>, reg_img: &Image<Option<usize>>) {

@@ -25,7 +25,7 @@ impl Incremental for AspectRatio {
         }
     }
 
-    fn increment(&mut self, p: Point,  _: &Image<u8>, _: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point, thres: i32,   _: &Image<u8>,  _: &Image<Option<usize>>) {
         self.bounds = self.bounds.expand(Rect(p, p))
     }
 
@@ -89,7 +89,7 @@ mod test {
                     Point { x: 6, y: 4 }
                 );
 
-                ar.increment(Point{ x: 6, y: 3 }, &img, &reg_img);
+                ar.increment(Point{ x: 6, y: 3 }, 0, &img, &reg_img);
 
                 assert_eq!(ar.bounds, expected_rect);
                 assert_eq!(ar.value(), 5.0f32 / 3.0f32);
@@ -112,7 +112,7 @@ mod test {
                     Point { x: 5, y: 5 }
                 );
 
-                ar.increment(Point{ x: 1, y: 5 }, &img, &reg_img);
+                ar.increment(Point{ x: 1, y: 5 }, 0, &img, &reg_img);
 
                 assert_eq!(ar.bounds, expected_rect);
                 assert_eq!(ar.value(), 5.0f32 / 4.0f32);

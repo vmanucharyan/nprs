@@ -1,7 +1,8 @@
 use structures::{Point, Rect};
 use image::Image;
 use super::feature::Feature;
-use super::incremental::{Incremental, ExtremalRegion};
+use super::incremental::{Incremental};
+use extract::ExtremalRegion;
 
 static PEAK_THRESHOLD: f32 = 0.05f32;
 
@@ -34,8 +35,8 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
         }
     }
 
-    fn increment(&mut self, p: Point, img: &Image<u8>, reg_img: &Image<Option<usize>>) {
-        self.features.increment(p, img, reg_img);
+    fn increment(&mut self, p: Point, thres: i32, img: &Image<u8>,  reg_img: &Image<Option<usize>>) {
+        self.features.increment(p, thres, img, reg_img);
         self.bounds = self.bounds.expand(Rect(p, p));
         self.weight += 0.1;
         self.points.push(p);
@@ -106,7 +107,7 @@ mod test {
             FakeFeature { init_point: p, incremented: 0, merged: 0 }
         }
 
-        fn increment(&mut self, _: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+        fn increment(&mut self, _: Point, thres: i32,   _: &Image<u8>,  reg_img: &Image<Option<usize>>) {
             self.incremented += 1;
         }
 
@@ -145,7 +146,7 @@ mod test {
                 let reg_img: Image<Option<usize>> = Image::from_data(vec![], 0, 0);
 
                 let mut region: Region<FakeFeature> = Incremental::init(Point { x: 6, y: 3 }, 0);
-                region.increment(Point { x: 6, y: 4 }, &img, &reg_img);
+                region.increment(Point { x: 6, y: 4 }, 0, &img, &reg_img);
             }
 
             it "should add point to region" {
@@ -177,7 +178,7 @@ mod test {
                 let r1p1 = Point { x: 6, y: 3 };
                 let r1p2 = Point { x: 6, y: 4 };
                 let mut r1: Region<FakeFeature> = Incremental::init(r1p1, 0);
-                r1.increment(r1p2, &img, &reg_img);
+                r1.increment(r1p2, 0, &img, &reg_img);
 
                 let r2p = Point { x:7, y: 3 };
                 let mut r2: Region<FakeFeature> = Incremental::init(r2p, 1);

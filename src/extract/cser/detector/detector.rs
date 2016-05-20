@@ -1,29 +1,57 @@
+use std::marker::PhantomData;
 use image::Image;
 use structures::Point;
-use extract::cser::{Incremental, ExtremalRegion, Trace};
+use extract::{ExtremalRegion, RegionDetector};
+use extract::cser::{Incremental, Trace};
 
-pub fn detect_regions<A: Incremental + ExtremalRegion + Sized, B: Trace<A>> (image: &Image<u8>, trace: &B) -> Vec<A> {
-    let baskets = hist(image);
-    let mut all_regions: Vec<A> = vec![];
-    let mut reg_image: Image<Option<usize>> = image.map( |_| None );
+pub struct CserDetector<A: Incremental + ExtremalRegion + Sized, B: Trace<A>> {
+    a: PhantomData<A>,
+    b: PhantomData<B>
+}
 
-    let mut neighbors_buf: Vec<usize> = vec![];
-
-    for i in 0..255 {
-        let points = &baskets[i];
-        for p in points {
-            process_point(p.clone(), image, &mut reg_image, &mut all_regions, &mut neighbors_buf);
+impl<A: Incremental + ExtremalRegion + Sized, B: Trace<A>> CserDetector<A, B> {
+    pub fn new() -> Self {
+        CserDetector {
+            a: PhantomData,
+            b: PhantomData
         }
-        trace.step(i as i32, &all_regions, &reg_image);
     }
+}
 
-    trace.result(&all_regions, &reg_image);
+impl<A: Incremental + ExtremalRegion + Sized, B: Trace<A>> RegionDetector for CserDetector<A, B> {
+    type Region = A;
+    type Trace = B;
 
-    return all_regions;
+    fn detect(image: &Image<u8>, trace: &mut B) -> Vec<A> {
+        let baskets = hist(image);
+        let mut all_regions: Vec<A> = vec![];
+        let mut reg_image: Image<Option<usize>> = image.map( |_| None );
+
+        let mut neighbors_buf: Vec<usize> = vec![];
+
+        for i in 0..255 {
+            let points = &baskets[i];
+            for p in points {
+                process_point(
+                    p.clone(),
+                    i as i32,
+                    image, &mut reg_image,
+                    &mut all_regions,
+                    &mut neighbors_buf
+                );
+            }
+            trace.step(i as i32, &all_regions, &reg_image);
+        }
+
+        trace.result(&all_regions, &reg_image);
+
+        return all_regions;
+    }
 }
 
 pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
     p: Point,
+    thres: i32,
     img: &Image<u8>,
     reg_image: &mut Image<Option<usize>>,
     all_regions: &mut Vec<A>,
@@ -39,7 +67,7 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
         },
         [r_idx] => {
             let r = &mut (all_regions[r_idx]);
-            r.increment(p, img, reg_image);
+            r.increment(p, thres, img, reg_image);
             reg_image.set_pixel(p.x, p.y, Some(r_idx));
         },
         [all..] => {
@@ -47,7 +75,7 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
             all.reverse();
             match all {
                 [r1_idx, rest..] => {
-                    all_regions[r1_idx].increment(p, img, reg_image);
+                    all_regions[r1_idx].increment(p, thres, img, reg_image);
                     reg_image.set_pixel(p.x, p.y, Some(r1_idx));
                     for r_idx in rest {
                         if let Some((r1, r2)) = index_twice(&mut all_regions[..], r1_idx, *r_idx) {

@@ -8,11 +8,13 @@ use stopwatch::Stopwatch;
 use nprs::image;
 use nprs::extract::cser::feature::{AspectRatio, Compactness, NumHoles, HorizontalCrossings};
 use nprs::extract::cser::{FullTrace, PrintTrace, EmptyTrace};
-use nprs::extract::cser::{Region, TracedRegion, Feature};
+use nprs::extract::cser::{Region, TracedRegion, Feature, CserDetector};
 use nprs::extract::cser;
+use nprs::extract::RegionDetector;
 
 type Features = (AspectRatio, Compactness, NumHoles, HorizontalCrossings);
 type Reg = Region<Features>;
+type Detector<'a> = CserDetector<TracedRegion<Reg>, FullTrace<'a, Reg>>;
 
 fn main() {
     assert!(env::args().count() == 2, "usage: nprs-cli <file name>");
@@ -21,10 +23,10 @@ fn main() {
         let img = image::io::load_from_file(&file_name).unwrap();
 
         let sw = Stopwatch::start_new();
-        let full_trace: FullTrace<Reg> = FullTrace::new("trace", img.width(), img.height());
+        let mut full_trace: FullTrace<Reg> = FullTrace::new("trace", img.width(), img.height());
         let trace = EmptyTrace;
 
-        let _: Vec<TracedRegion<Reg>> = cser::detect_regions(&img, &full_trace);
+        Detector::detect(&img, &mut full_trace);
 
         println!("region detection took {}ms", sw.elapsed_ms());
     }
