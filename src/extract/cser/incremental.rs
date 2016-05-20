@@ -1,6 +1,8 @@
 use image::Image;
 use structures::{Point, Rect};
 
+use super::Feature;
+
 pub trait Incremental {
     fn init(p: Point, reg_idx: usize) -> Self;
     fn increment(&mut self, p: Point,  _: &Image<u8>, reg_img: &Image<Option<usize>>);
@@ -8,7 +10,7 @@ pub trait Incremental {
 }
 
 pub trait ExtremalRegion : Sized {
-    type F;
+    type F: Feature + Sized;
 
     fn points<'a> (&'a self) -> &'a [Point];
     fn bounds(&self) -> Rect;
