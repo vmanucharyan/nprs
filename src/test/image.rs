@@ -1,6 +1,3 @@
-#![feature(plugin,const_fn)]
-#![plugin(stainless)]
-
 pub use image::Image;
 
 describe! image {
@@ -18,7 +15,7 @@ describe! image {
         }
 
         failing "if data size does not match dimensions" {
-            let img: Image<u8> = Image::from_data(data, 3, 4);
+            let _: Image<u8> = Image::from_data(data, 3, 4);
         }
     }
 

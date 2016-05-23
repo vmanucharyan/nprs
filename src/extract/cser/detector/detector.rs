@@ -71,7 +71,10 @@ pub fn process_point<A: Incremental + ExtremalRegion + Sized>(
             reg_image.set_pixel(p.x, p.y, Some(r_idx));
         },
         [all..] => {
-            all.sort_by(|a, b| all_regions[*a].points().len().cmp(&all_regions[*b].points().len()));
+            all.sort_by(|a, b| {
+                all_regions[*a].points().len().cmp(&all_regions[*b].points().len())
+            });
+
             all.reverse();
             match all {
                 [r1_idx, rest..] => {

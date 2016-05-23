@@ -2,7 +2,7 @@ use std::cmp;
 
 pub use super::Point;
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, RustcEncodable, RustcDecodable)]
 pub struct Rect(pub Point, pub Point);
 
 impl Rect {

@@ -5,6 +5,9 @@
 #![allow(dead_code)]
 
 extern crate image as pd_image;
+extern crate rustc_serialize;
+extern crate bincode;
+extern crate flate2;
 
 pub mod extract;
 pub mod image;

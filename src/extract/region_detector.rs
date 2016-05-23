@@ -11,6 +11,7 @@ pub trait ExtremalRegion : Sized {
     fn bounds(&self) -> Rect;
     fn peaks<'a>(&'a self) -> &'a [(Rect, Self::F)];
     fn weight(&self) -> f32;
+    fn feature_vec(&self, v: &mut Vec<f32>);
 }
 
 pub trait RegionDetector {

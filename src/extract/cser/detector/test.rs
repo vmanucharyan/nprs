@@ -12,15 +12,15 @@ pub struct TestInc {
 }
 
 impl Incremental for TestInc {
-    fn init(p: Point, _: usize, thres: i32) -> Self {
+    fn init(p: Point, _: usize, _: i32) -> Self {
         TestInc { points: vec![p], peaks: vec![] }
     }
 
-    fn increment(&mut self, p: Point, thres: i32,  _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+    fn increment(&mut self, p: Point, _: i32,  _: &Image<u8>, _: &Image<Option<usize>>) {
         self.points.push(p);
     }
 
-    fn merge(&mut self, r: &TestInc, thres: i32, _: &Image<u8>, _: &Image<Option<usize>>) {
+    fn merge(&mut self, r: &TestInc, _: i32, _: &Image<u8>, _: &Image<Option<usize>>) {
         self.points.extend_from_slice(&r.points[..]);
     }
 }
@@ -47,6 +47,8 @@ impl ExtremalRegion for TestInc {
     fn peaks<'a>(&'a self) -> &'a [(Rect, AspectRatio)] {
         &self.peaks[..]
     }
+
+    fn feature_vec(&self, v: &mut Vec<f32>) {}
 }
 
 describe! detect_regions {
@@ -65,7 +67,6 @@ describe! detect_regions {
 
     describe! find_neighbors {
         it "should return indexes of adjacent regions" {
-            let r: TestInc = Incremental::init(Point { x: 0, y: 0 }, 0, 0);
             let b: Vec<u8> = vec![
                 0, 1, 2, 0,
                 0, 0, 2, 0,
@@ -80,7 +81,6 @@ describe! detect_regions {
                 .collect();
 
             let img: Image<Option<usize>> = Image::from_data(data, 4, 4);
-            let reg: Vec<TestInc> = vec![];
 
             find_neighbors(&img, Point { x: 0, y: 0 }, &mut neighbors_buf);
             assert_eq!(neighbors_buf.len(), 1);

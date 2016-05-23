@@ -1,11 +1,27 @@
 use std::fs;
+use std::io::prelude::*;
+use std::io;
+use std::marker::PhantomData;
 use std::hash::{Hash, Hasher, SipHasher};
-use image;
+use std::collections::HashMap;
+
+use bincode;
+use bincode::rustc_serialize::{encode, decode};
+
+use rustc_serialize::json;
+use rustc_serialize::json::EncodeResult;
+
+use flate2::Compression;
+use flate2::write::{ZlibEncoder};
+use flate2::read::{ZlibDecoder};
+
 use image::Image;
 use image::pixel::{ToLuma, ToRgba, Rgba};
 use structures::{Point, Rect};
 use extract::ExtremalRegion;
-use super::{Incremental, Feature};
+use super::{Incremental};
+
+static MAX_THRES_REGS: i32 = 1000000;
 
 impl ToLuma for Option<usize> {
     fn to_luma(&self) -> u8 {
@@ -27,21 +43,23 @@ impl ToRgba for Option<usize> {
 }
 
 pub trait Trace<R: ExtremalRegion> {
-    fn step(&self, num: i32, all_regions: &[R], reg_img: &Image<Option<usize>>);
+    fn step(&mut self, num: i32, all_regions: &[R], reg_img: &Image<Option<usize>>);
     fn result(&self, all_regions: &[R], reg_img: &Image<Option<usize>>);
 }
 
 pub struct PrintTrace;
 
 impl<R: ExtremalRegion> Trace<R> for PrintTrace {
-    fn step(&self, num: i32, regions: &[R], _: &Image<Option<usize>>) {
+    fn step(&mut self, num: i32, regions: &[R], _: &Image<Option<usize>>) {
         println!("step {}: found {} regions", num, regions.len());
     }
 
     fn result(&self, regions: &[R], _: &Image<Option<usize>>) {
         println!("Finished.");
         println!("found {} regions", regions.len());
-        let sum_peaks: usize = regions.iter().map(|reg| reg.peaks().len()).fold(0, |a, b| a + b);
+        let sum_peaks: usize = regions.iter()
+            .map(|reg| reg.peaks().len())
+            .fold(0, |a, b| a + b);
         println!("total number of peaks: {}", sum_peaks);
     }
 }
@@ -49,51 +67,120 @@ impl<R: ExtremalRegion> Trace<R> for PrintTrace {
 pub struct EmptyTrace;
 
 impl<R: ExtremalRegion> Trace<R> for EmptyTrace {
-    fn step(&self, _: i32, _: &[R], _: &Image<Option<usize>>) {}
+    fn step(&mut self, _: i32, _: &[R], _: &Image<Option<usize>>) {}
     fn result(&self, _: &[R], _: &Image<Option<usize>>) {}
 }
 
 pub struct FullTrace<'a, R: ExtremalRegion + Clone> {
     pub path: &'a str,
-    regions: Vec<TracedRegion<R>>,
-    regions_map: Vec<Vec<i32>>
+    trace_result: TraceResult,
+    r: PhantomData<R>
+}
+
+#[derive(Debug)]
+pub enum TraceWriteError {
+    EncodeError(json::EncoderError),
+    CompressErrror(io::Error),
+    IoError(io::Error)
+}
+
+pub type TraceWriteResult<T> = Result<T, TraceWriteError>;
+
+#[derive(Debug, RustcEncodable, RustcDecodable)]
+pub struct TraceResult {
+    regions: HashMap<i32, RegionSnapshot>,
+    regions_map: Vec<Vec<Vec<i32>>>,
 }
 
 impl<'a, R: ExtremalRegion + Clone> FullTrace<'a, R> {
     pub fn new(path: &'a str, image_width: usize, image_height: usize) -> Self {
         FullTrace {
             path: path,
-            regions: vec![],
-            regions_map: vec![vec![0;image_width]; image_height]
+            trace_result: TraceResult {
+                regions: HashMap::new(),
+                regions_map: vec![vec![vec![];image_width]; image_height],
+            },
+            r: PhantomData
         }
+    }
+
+    pub fn get_trace_result<'b>(&'b self) -> &'b TraceResult {
+        &self.trace_result
+    }
+
+    pub fn as_json(&self) -> TraceWriteResult<String> {
+        json::encode(&self.trace_result)
+            .map_err(|e| TraceWriteError::EncodeError(e))
+    }
+
+    pub fn write_json(&self, write: &mut Write) -> TraceWriteResult<()> {
+        let json = try!(self.as_json());
+        write.write_all(json.as_bytes())
+            .map_err(|e| TraceWriteError::IoError(e))
+    }
+
+    pub fn write_zipped_json(&self, write: &mut Write) -> TraceWriteResult<()> {
+        let json = try!(self.as_json());
+        let mut encoder = ZlibEncoder::new(write, Compression::Default);
+        encoder.write_all(json.as_bytes())
+            .map_err(|e| TraceWriteError::CompressErrror(e))
     }
 }
 
 impl<'a, R: ExtremalRegion + Clone> Trace<TracedRegion<R>> for FullTrace<'a, R> {
-    fn step(&self, num: i32, _: &[TracedRegion<R>], reg_img: &Image<Option<usize>>) {
-        if num % 10 == 0 {
-            let path = format!("{}", self.path);
-            let _ = fs::create_dir_all(&path);
-            let r = image::io::save_to_file(&format!("{}/{}.png", &path, num), &reg_img);
-            debug_assert!(r.is_ok());
+    fn step(&mut self, num: i32, all_regions: &[TracedRegion<R>], reg_img: &Image<Option<usize>>) {
+        if num % 10 == 0 && num < 150 {
+            let regs_count = all_regions.len();
+            let this_step_regions: Vec<(&TracedRegion<R>, usize)> = all_regions.iter()
+                .zip(0 .. regs_count)
+                .filter(|r| r.0.threshold() == num)
+                .collect();
+
+            let it = this_step_regions.iter()
+                .map(|x| {
+                    let (r, i) = *x;
+                    let mut f: Vec<f32> = vec![];
+                    r.feature_vec(&mut f);
+                    let rs = RegionSnapshot {
+                        features: f,
+                        bounds: r.bounds(),
+                        thres: r.threshold()
+                    };
+                    (r.threshold() * MAX_THRES_REGS + (i as i32), rs)
+                });
+
+            for x in it {
+                let (i, r) = x;
+                self.trace_result.regions.insert(i, r);
+            }
+
+            for x in 0 .. reg_img.width() {
+                for y in 0 .. reg_img.height() {
+                    if let Some(reg_idx) = reg_img[(x, y)] {
+                        let r = &all_regions[reg_idx];
+                        if r.threshold() == num {
+                            let idx = r.threshold() * MAX_THRES_REGS + (reg_idx as i32);
+                            (self.trace_result.regions_map[y][x]).push(idx);
+                        }
+                    }
+                }
+            }
         }
     }
 
-    fn result(&self, regions: &[TracedRegion<R>], _: &Image<Option<usize>>) {
-        for _ in regions.iter() {}
-    }
+    fn result(&self, _: &[TracedRegion<R>], _: &Image<Option<usize>>) {}
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct TracedRegion<R: ExtremalRegion + Clone> {
-    region: R,
-    prev_regions: Vec<RegionSnapshot<R::F>>
+    region: R
 }
 
-#[derive(Clone)]
-pub struct RegionSnapshot<F: Feature> {
-    feature: F,
-    bounds: Rect
+#[derive(Debug, Clone, RustcEncodable, RustcDecodable)]
+pub struct RegionSnapshot {
+    features: Vec<f32>,
+    bounds: Rect,
+    thres: i32
 }
 
 impl<R: ExtremalRegion + Clone> ExtremalRegion for TracedRegion<R> {
@@ -118,13 +205,16 @@ impl<R: ExtremalRegion + Clone> ExtremalRegion for TracedRegion<R> {
     fn peaks<'a> (&'a self) -> &'a [(Rect, R::F)] {
         &self.region.peaks()
     }
+
+    fn feature_vec(&self, v: &mut Vec<f32>) {
+        self.region.feature_vec(v);
+    }
 }
 
 impl<R: ExtremalRegion + Incremental + Clone> Incremental for TracedRegion<R> {
     fn init(p: Point, reg_idx: usize, thres: i32) -> Self {
         TracedRegion {
-            region: Incremental::init(p, reg_idx, thres),
-            prev_regions: vec![]
+            region: Incremental::init(p, reg_idx, thres)
         }
     }
 

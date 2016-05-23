@@ -4,6 +4,7 @@ use super::feature::Feature;
 use super::incremental::{Incremental};
 use extract::ExtremalRegion;
 
+
 static PEAK_THRESHOLD: f32 = 0.05f32;
 
 #[derive(Debug, Clone)]
@@ -51,6 +52,7 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
 
         self.prev_weight = self.weight;
         self.weight = new_weight;
+        self.threshold = thres;
     }
 
     fn merge(&mut self, r: &Self, thres: i32, img: &Image<u8>, reg_image: &Image<Option<usize>>) {
@@ -66,6 +68,7 @@ impl<A: Incremental + Feature + Clone> Incremental for Region<A> {
 
         self.prev_weight = self.weight;
         self.weight = new_weight;
+        self.threshold = thres;
     }
 }
 
@@ -91,6 +94,10 @@ impl<A: Incremental + Feature + Clone> ExtremalRegion for Region<A> {
     fn peaks<'a> (&'a self) -> &'a [(Rect, A)] {
         &self.peaks[..]
     }
+
+    fn feature_vec(&self, v: &mut Vec<f32>) {
+        self.features.value(v);
+    }
 }
 
 #[cfg(test)]
@@ -109,21 +116,21 @@ mod test {
     }
 
     impl Incremental for FakeFeature {
-        fn init(p: Point, _: usize, thres: i32) -> Self {
+        fn init(p: Point, _: usize, _: i32) -> Self {
             FakeFeature { init_point: p, incremented: 0, merged: 0 }
         }
 
-        fn increment(&mut self, _: Point, thres: i32,   _: &Image<u8>,  reg_img: &Image<Option<usize>>) {
+        fn increment(&mut self, _: Point, _: i32,   _: &Image<u8>,  _: &Image<Option<usize>>) {
             self.incremented += 1;
         }
 
-        fn merge(&mut self, _: &Self, thres: i32, _: &Image<u8>, reg_img: &Image<Option<usize>>) {
+        fn merge(&mut self, _: &Self, _: i32, _: &Image<u8>, _: &Image<Option<usize>>) {
             self.merged += 1;
         }
     }
 
     impl Feature for FakeFeature {
-        fn value(&self, out: &mut Vec<f32>) { }
+        fn value(&self, _: &mut Vec<f32>) { }
     }
 
     describe! region {
@@ -187,7 +194,7 @@ mod test {
                 r1.increment(r1p2, 0, &img, &reg_img);
 
                 let r2p = Point { x:7, y: 3 };
-                let mut r2: Region<FakeFeature> = Incremental::init(r2p, 1, 0);
+                let r2: Region<FakeFeature> = Incremental::init(r2p, 1, 0);
 
                 r1.merge(&r2, 0, &img, &reg_img);
             }
