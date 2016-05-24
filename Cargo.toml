@@ -26,5 +26,9 @@ path = "src/cli.rs"
 name = "nprs-train"
 path = "src/train.rs"
 
+[[bin]]
+name = "nprs-trace"
+path = "src/trace.rs"
+
 [profile.release]
 debug = true
