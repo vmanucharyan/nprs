@@ -3,8 +3,6 @@ extern crate stopwatch;
 
 use std::env;
 use std::fs;
-use std::fs::File;
-use std::io::Write;
 
 use stopwatch::Stopwatch;
 
@@ -25,7 +23,12 @@ fn main() {
         let img = image::io::load_from_file(&file_name).unwrap();
 
         let sw = Stopwatch::start_new();
-        let mut full_trace: FullTrace<Reg> = FullTrace::new("trace", img.width(), img.height());
+        let mut full_trace: FullTrace<Reg> = FullTrace::new(
+            "trace",
+            img.width(), img.height(),
+            (5, 5),
+            (300, 300)
+        );
         let mut empty_trace = EmptyTrace;
 
         Detector::detect(&img, &mut full_trace);

@@ -5,15 +5,10 @@ use std::marker::PhantomData;
 use std::hash::{Hash, Hasher, SipHasher};
 use std::collections::HashMap;
 
-use bincode;
-use bincode::rustc_serialize::{encode, decode};
-
 use rustc_serialize::json;
-use rustc_serialize::json::EncodeResult;
 
 use flate2::Compression;
-use flate2::write::{ZlibEncoder};
-use flate2::read::{ZlibDecoder};
+use flate2::write::{DeflateEncoder};
 
 use image::Image;
 use image::pixel::{ToLuma, ToRgba, Rgba};
@@ -74,7 +69,9 @@ impl<R: ExtremalRegion> Trace<R> for EmptyTrace {
 pub struct FullTrace<'a, R: ExtremalRegion + Clone> {
     pub path: &'a str,
     trace_result: TraceResult,
-    r: PhantomData<R>
+    r: PhantomData<R>,
+    min_region_dims: (i32, i32),
+    max_region_dims: (i32, i32)
 }
 
 #[derive(Debug)]
@@ -93,15 +90,30 @@ pub struct TraceResult {
 }
 
 impl<'a, R: ExtremalRegion + Clone> FullTrace<'a, R> {
-    pub fn new(path: &'a str, image_width: usize, image_height: usize) -> Self {
+    pub fn new(
+        path: &'a str,
+        image_width: usize,
+        image_height: usize,
+        min_region_dims: (i32, i32),
+        max_region_dims: (i32, i32)
+    ) -> Self {
         FullTrace {
             path: path,
             trace_result: TraceResult {
                 regions: HashMap::new(),
                 regions_map: vec![vec![vec![];image_width]; image_height],
             },
-            r: PhantomData
+            r: PhantomData,
+            min_region_dims: min_region_dims,
+            max_region_dims: max_region_dims
         }
+    }
+
+    fn is_good(&self, r: &R) -> bool {
+        self.min_region_dims.0 <= r.bounds().width() &&
+        self.min_region_dims.1 <= r.bounds().height() &&
+        self.max_region_dims.0 >= r.bounds().width() &&
+        self.max_region_dims.1 >= r.bounds().height()
     }
 
     pub fn get_trace_result<'b>(&'b self) -> &'b TraceResult {
@@ -121,7 +133,7 @@ impl<'a, R: ExtremalRegion + Clone> FullTrace<'a, R> {
 
     pub fn write_zipped_json(&self, write: &mut Write) -> TraceWriteResult<()> {
         let json = try!(self.as_json());
-        let mut encoder = ZlibEncoder::new(write, Compression::Default);
+        let mut encoder = DeflateEncoder::new(write, Compression::Default);
         encoder.write_all(json.as_bytes())
             .map_err(|e| TraceWriteError::CompressErrror(e))
     }
@@ -129,11 +141,12 @@ impl<'a, R: ExtremalRegion + Clone> FullTrace<'a, R> {
 
 impl<'a, R: ExtremalRegion + Clone> Trace<TracedRegion<R>> for FullTrace<'a, R> {
     fn step(&mut self, num: i32, all_regions: &[TracedRegion<R>], reg_img: &Image<Option<usize>>) {
-        if num % 10 == 0 && num < 150 {
+        if num % 10 == 0 && num < 255 {
             let regs_count = all_regions.len();
+
             let this_step_regions: Vec<(&TracedRegion<R>, usize)> = all_regions.iter()
                 .zip(0 .. regs_count)
-                .filter(|r| r.0.threshold() == num)
+                .filter(|r| r.0.threshold() > num - 10 && r.0.threshold() <= num && self.is_good(&r.0.region))
                 .collect();
 
             let it = this_step_regions.iter()
@@ -158,7 +171,7 @@ impl<'a, R: ExtremalRegion + Clone> Trace<TracedRegion<R>> for FullTrace<'a, R> 
                 for y in 0 .. reg_img.height() {
                     if let Some(reg_idx) = reg_img[(x, y)] {
                         let r = &all_regions[reg_idx];
-                        if r.threshold() == num {
+                        if r.threshold() > num - 10 && r.threshold() <= num  && self.is_good(&r.region) {
                             let idx = r.threshold() * MAX_THRES_REGS + (reg_idx as i32);
                             (self.trace_result.regions_map[y][x]).push(idx);
                         }
@@ -173,7 +186,7 @@ impl<'a, R: ExtremalRegion + Clone> Trace<TracedRegion<R>> for FullTrace<'a, R> 
 
 #[derive(Debug, Clone)]
 pub struct TracedRegion<R: ExtremalRegion + Clone> {
-    region: R
+    pub region: R
 }
 
 #[derive(Debug, Clone, RustcEncodable, RustcDecodable)]
