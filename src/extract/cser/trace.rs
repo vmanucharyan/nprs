@@ -1,4 +1,3 @@
-use std::fs;
 use std::io::prelude::*;
 use std::io;
 use std::marker::PhantomData;

@@ -27,7 +27,7 @@ fn main() {
             "trace",
             img.width(), img.height(),
             (5, 5),
-            (300, 300)
+            (300, 300),
         );
         let mut empty_trace = EmptyTrace;
 

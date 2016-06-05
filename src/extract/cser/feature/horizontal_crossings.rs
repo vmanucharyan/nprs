@@ -30,15 +30,15 @@ impl Incremental for HorizontalCrossings {
         let mut transitions = 0;
 
         if (reg_image.inside(p.x - 1, p.y)) && (reg_image[(p.x - 1, p.y)] == Some(self.reg_idx)) {
-            transitions += 1;
-        } else {
             transitions -= 1;
+        } else {
+            transitions += 1;
         }
 
         if (reg_image.inside(p.x + 1, p.y)) && (reg_image[(p.x + 1, p.y)] == Some(self.reg_idx)) {
-            transitions += 1;
-        } else {
             transitions -= 1;
+        } else {
+            transitions += 1;
         }
 
         if p.y < self.y_top {
@@ -113,6 +113,9 @@ impl Feature for HorizontalCrossings {
                 m.sort();
                 m[1] as f32
             };
+
+        // debug print
+        // println!("{:?} - {}", &self.num_crossings, res);
 
         out.push(res);
     }

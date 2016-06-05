@@ -27,11 +27,13 @@ impl Incremental for NumHoles {
         m[1][1] = 1;
         let (ac1, ac3, acd) = count_patterns(&m);
 
-        let dc1 = bc1 - ac1;
-        let dc3 = bc3 - ac3;
-        let dcd = bcd - acd;
+        let dc1 = ac1 - bc1;
+        let dc3 = ac3 - bc3;
+        let dcd = acd - bcd;
 
-        self.genus = 0.25f32 * ((dc1 - dc3 + 2 * dcd) as f32);
+        let diff = 0.25f32 * ((dc1 - dc3 + 2 * dcd) as f32);
+        self.genus += diff;
+        // println!("increment genus: 0.25 * ({} - {} + 2 * {}) = {}. {}", dc1, dc3, dcd, diff, self.genus);
     }
 
     fn merge(&mut self, other: &Self, _: i32, _: &Image<u8>, _: &Image<Option<usize>>) {

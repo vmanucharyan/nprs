@@ -48,7 +48,7 @@ impl ExtremalRegion for TestInc {
         &self.peaks[..]
     }
 
-    fn feature_vec(&self, v: &mut Vec<f32>) {}
+    fn feature_vec(&self, _: &mut Vec<f32>) {}
 }
 
 describe! detect_regions {
